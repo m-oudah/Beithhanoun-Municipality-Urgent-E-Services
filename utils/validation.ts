@@ -13,7 +13,9 @@ export const validatePhone = (phone: string): boolean => {
 };
 
 export const validateName = (name: string): boolean => {
-  return name.trim().length >= 3;
+  // Must be at least 3 chars and only letters/spaces (English + Arabic)
+  const re = /^[a-zA-Z\u0600-\u06FF\s]{3,}$/;
+  return re.test(name.trim());
 };
 
 // Basic XSS prevention (removes script tags and html entities)

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, X, Globe, Home, Users, Mail, LayoutDashboard } from 'lucide-react';
+import { Menu, X, Globe, Home, Users, Mail, LayoutDashboard, Megaphone } from 'lucide-react';
 import { Language } from '../types';
 import { TRANSLATIONS } from '../constants';
 import { Chatbot } from './Chatbot';
@@ -23,9 +23,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, lang, setLang, current
 
   const navItems = [
     { id: 'home', label: t.home, icon: <Home size={18} /> },
+    { id: 'ads', label: t.ads, icon: <Megaphone size={18} /> },
     { id: 'register', label: t.register, icon: <Users size={18} /> },
     { id: 'contact', label: t.contact, icon: <Mail size={18} /> },
-    { id: 'admin', label: t.admin, icon: <LayoutDashboard size={18} /> },
   ];
 
   return (
@@ -36,20 +36,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, lang, setLang, current
           <div className="flex justify-between items-center h-20">
             {/* Logo Area */}
             <div className="flex items-center space-x-4 rtl:space-x-reverse cursor-pointer group" onClick={() => setPage('home')}>
-              <div className="w-16 h-16 rounded-full border-2 border-primary-500 p-1 flex items-center justify-center bg-white shadow-sm group-hover:shadow-md transition">
-                <img 
-                  src="https://upload.wikimedia.org/wikipedia/commons/e/ea/Beit_Hanoun_Municipality_Logo.png" 
-                  alt="Beit Hanoun Municipality Logo" 
-                  className="w-full h-full object-contain"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    e.currentTarget.parentElement!.innerHTML = '<span class="text-xs font-bold text-primary-500 text-center leading-tight">بيت<br>حانون</span>';
-                  }}
-                />
-              </div>
               <div className="flex flex-col">
                 <h1 className="text-xl font-bold leading-tight text-primary-600 dark:text-primary-500">{t.title}</h1>
-                <span className="text-xs text-slate-500 dark:text-slate-400">{t.subtitle}</span>
+                <span className="text-sm font-semibold text-secondary-600 dark:text-secondary-400">{t.subtitle}</span>
               </div>
             </div>
 
@@ -141,10 +130,18 @@ export const Layout: React.FC<LayoutProps> = ({ children, lang, setLang, current
       <footer className="bg-secondary-800 text-slate-400 py-8 border-t-4 border-primary-500">
         <div className="container mx-auto px-4 text-center">
           <p className="text-sm font-medium text-slate-300">{t.footer}</p>
-          <div className="mt-4 flex justify-center gap-4 text-xs text-slate-500">
-            <span>info@beithanoun.ps</span>
-            <span>|</span>
-            <span>+970 8 123 4567</span>
+          <div className="mt-4 flex flex-col items-center gap-2">
+            <div className="flex justify-center gap-4 text-xs text-slate-500">
+              <span>info@beithanoun.ps</span>
+              <span>|</span>
+              <span>+970 8 123 4567</span>
+            </div>
+            <button 
+              onClick={() => setPage('admin')}
+              className="mt-2 text-xs text-slate-600 hover:text-slate-400 transition"
+            >
+              {t.admin}
+            </button>
           </div>
         </div>
       </footer>

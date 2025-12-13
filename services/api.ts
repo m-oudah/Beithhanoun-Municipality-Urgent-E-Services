@@ -1,4 +1,5 @@
-import { CitizenRecord, ContactMessage } from '../types';
+import { CitizenRecord, ContactMessage, Announcement } from '../types';
+import { MOCK_ANNOUNCEMENTS } from '../constants';
 
 // Simulate API delay
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -35,22 +36,36 @@ export const ApiService = {
         { 
           id: '1', 
           fullName: 'Ahmed Al-Masri', 
+          idNumber: '901234567',
           phone: '0599123456', 
           whatsapp: '0599123456',
+          originalArea: 'Beit Hanoun - Center',
+          originalStreet: 'Al-Sikka St',
+          currentEvacuationState: 'north',
+          evacuationType: 'school',
+          wifeName: 'Fatima Al-Masri',
+          wifeIdNumber: '907654321',
           familyMembers: 5, 
-          currentLocation: 'Jabalia Camp', 
-          originalAddress: 'Al-Sikka St', 
+          males: 2,
+          females: 3,
           status: 'verified', 
           submittedAt: new Date().toISOString() 
         },
         { 
           id: '2', 
-          fullName: 'Fatima Khalil', 
+          fullName: 'Khalil Ibrahim', 
+          idNumber: '909876543',
           phone: '0599987654', 
           whatsapp: '0599987654',
+          originalArea: 'Beit Hanoun - Izbat',
+          originalStreet: 'Main St',
+          currentEvacuationState: 'gaza',
+          evacuationType: 'rent',
+          wifeName: 'Suha Ibrahim',
+          wifeIdNumber: '905555555',
           familyMembers: 3, 
-          currentLocation: 'Beit Hanoun - Center', 
-          originalAddress: 'Main St', 
+          males: 1,
+          females: 2,
           status: 'urgent', 
           submittedAt: new Date().toISOString() 
         },
@@ -77,5 +92,48 @@ export const ApiService = {
       return existing[index];
     }
     return null;
+  },
+
+  async getAnnouncements(): Promise<Announcement[]> {
+    await delay(500);
+    const existing = localStorage.getItem('announcements');
+    if (existing) {
+        return JSON.parse(existing);
+    }
+    // Initial Load of Mock Data
+    localStorage.setItem('announcements', JSON.stringify(MOCK_ANNOUNCEMENTS));
+    return MOCK_ANNOUNCEMENTS;
+  },
+
+  async createAnnouncement(data: Omit<Announcement, 'id'>): Promise<Announcement> {
+    await delay(500);
+    const newAnnouncement: Announcement = {
+        ...data,
+        id: Math.random().toString(36).substr(2, 9)
+    };
+    const existing: Announcement[] = JSON.parse(localStorage.getItem('announcements') || JSON.stringify(MOCK_ANNOUNCEMENTS));
+    const updated = [newAnnouncement, ...existing];
+    localStorage.setItem('announcements', JSON.stringify(updated));
+    return newAnnouncement;
+  },
+
+  async updateAnnouncement(id: string, data: Partial<Announcement>): Promise<Announcement | null> {
+    await delay(500);
+    const existing: Announcement[] = JSON.parse(localStorage.getItem('announcements') || JSON.stringify(MOCK_ANNOUNCEMENTS));
+    const index = existing.findIndex(a => a.id === id);
+    if (index !== -1) {
+        existing[index] = { ...existing[index], ...data };
+        localStorage.setItem('announcements', JSON.stringify(existing));
+        return existing[index];
+    }
+    return null;
+  },
+
+  async deleteAnnouncement(id: string): Promise<boolean> {
+    await delay(500);
+    const existing: Announcement[] = JSON.parse(localStorage.getItem('announcements') || JSON.stringify(MOCK_ANNOUNCEMENTS));
+    const updated = existing.filter(a => a.id !== id);
+    localStorage.setItem('announcements', JSON.stringify(updated));
+    return true;
   }
 };

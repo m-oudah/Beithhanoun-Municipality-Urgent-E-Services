@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Mail, MessageSquare, Send, User, MessageCircle, AlertCircle } from 'lucide-react';
+import { Mail, Send, User, MessageCircle, AlertCircle, Phone, ShieldAlert } from 'lucide-react';
 import { Language } from '../types';
 import { TRANSLATIONS } from '../constants';
 import { ApiService } from '../services/api';
@@ -70,8 +69,8 @@ export const Contact: React.FC<ContactProps> = ({ lang }) => {
     <div className="container mx-auto px-4 py-12">
       <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
         
-        {/* Info Sidebar */}
-        <div className="md:col-span-1 space-y-6">
+        {/* Info Sidebar (Right Side in Arabic) */}
+        <div className="md:col-span-1 space-y-6 order-last md:order-none">
           <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border-t-4 border-secondary-600 transition-colors">
             <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">{t.contactForm.title}</h3>
             <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">{t.contactForm.desc}</p>
@@ -83,14 +82,34 @@ export const Contact: React.FC<ContactProps> = ({ lang }) => {
               </div>
             </div>
           </div>
+
+          {/* Emergency Contacts Section */}
+          <div className="bg-red-50 dark:bg-red-900/20 p-6 rounded-xl shadow-lg border border-red-100 dark:border-red-900 transition-colors">
+            <h3 className="text-lg font-bold mb-4 text-red-700 dark:text-red-400 flex items-center gap-2">
+                <ShieldAlert size={20} />
+                {t.contactForm.emergencyContacts}
+            </h3>
+            <ul className="space-y-3">
+                {t.contactForm.contacts.map((contact, index) => (
+                    <li key={index} className="flex justify-between items-center border-b border-red-200 dark:border-red-800 pb-2 last:border-0 last:pb-0">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{contact.label}</span>
+                        <a href={`tel:${contact.number}`} className="text-lg font-bold text-red-600 dark:text-red-400 font-mono hover:underline">
+                            {contact.number}
+                        </a>
+                    </li>
+                ))}
+            </ul>
+          </div>
         </div>
 
         {/* Form Area */}
         <div className="md:col-span-2 bg-white dark:bg-slate-800 rounded-xl shadow-lg p-8 transition-colors">
           <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+            
+            {/* Name & Email Row (Valid Email Top Left in Arabic) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t.contactForm.name}</label>
+                <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t.contactForm.name} <span className="text-red-500">*</span></label>
                 <div className="relative">
                   <User size={18} className={`absolute top-3 text-gray-400 ${lang === 'ar' ? 'right-3' : 'left-3'}`} />
                   <input 
@@ -98,14 +117,19 @@ export const Contact: React.FC<ContactProps> = ({ lang }) => {
                     required
                     maxLength={50}
                     value={formData.name}
-                    onChange={e => setFormData({...formData, name: e.target.value})}
+                    onChange={e => {
+                        // Prevent numbers and special characters active filtering
+                        const val = e.target.value.replace(/[^a-zA-Z\u0600-\u06FF\s]/g, '');
+                        setFormData({...formData, name: val});
+                    }}
                     className={`w-full py-2.5 border ${errors.name ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'} bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 outline-none transition ${lang === 'ar' ? 'pr-10 pl-3' : 'pl-10 pr-3'}`}
                   />
                 </div>
                 {errors.name && <p className="text-red-500 text-xs flex items-center gap-1"><AlertCircle size={12}/>{errors.name}</p>}
               </div>
+
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t.contactForm.email}</label>
+                <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t.contactForm.email} <span className="text-red-500">*</span></label>
                 <div className="relative">
                   <Mail size={18} className={`absolute top-3 text-gray-400 ${lang === 'ar' ? 'right-3' : 'left-3'}`} />
                   <input 
@@ -143,7 +167,7 @@ export const Contact: React.FC<ContactProps> = ({ lang }) => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t.contactForm.subject}</label>
+              <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t.contactForm.subject} <span className="text-red-500">*</span></label>
               <input 
                 type="text" 
                 required
@@ -156,7 +180,7 @@ export const Contact: React.FC<ContactProps> = ({ lang }) => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t.contactForm.message}</label>
+              <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t.contactForm.message} <span className="text-red-500">*</span></label>
               <textarea 
                 required
                 rows={5}

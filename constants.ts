@@ -1,37 +1,134 @@
 
-import { Language } from './types';
+import { Language, Announcement } from './types';
 
 export const LOCATIONS = [
   "Beit Hanoun - Center",
   "Beit Hanoun - Izbat Beit Hanoun",
   "Beit Hanoun - Al-Karama",
-  "Jabalia Camp (Temporary)",
-  "Gaza City (Temporary)",
-  "South Gaza (Temporary)",
-  "Other"
+  "Beit Hanoun - Al-Sikka",
+  "Beit Hanoun - Towers",
+  "Beit Hanoun - Al-Amal",
+  "Beit Hanoun - Al-Zaytun"
+];
+
+export const EVACUATION_TYPES = [
+  { id: 'camp', en: 'Displacement Camp', ar: 'مخيم نزوح' },
+  { id: 'tent', en: 'Private Tent', ar: 'خيمة خاصة' },
+  { id: 'school', en: 'UNRWA/Gov School', ar: 'مدرسة (إيواء)' },
+  { id: 'relative', en: 'With Relatives', ar: 'عند أقارب' },
+  { id: 'rent', en: 'Rented Apartment', ar: 'شقة مستأجرة' },
+  { id: 'other', en: 'Other', ar: 'أخرى' }
+];
+
+export const EVACUATION_STATES = [
+  { id: 'north', en: 'North Gaza', ar: 'شمال غزة' },
+  { id: 'gaza', en: 'Gaza City', ar: 'مدينة غزة' },
+  { id: 'middle', en: 'Middle Area', ar: 'الوسطى' },
+  { id: 'khan', en: 'Khan Yunis', ar: 'خانيونس' },
+  { id: 'rafah', en: 'Rafah', ar: 'رفح' },
+  { id: 'outside', en: 'Outside Gaza', ar: 'خارج القطاع' }
+];
+
+export const MOCK_ANNOUNCEMENTS: Announcement[] = [
+  {
+    id: '1',
+    date: '2024-03-15',
+    category: 'emergency',
+    title: {
+      en: 'Urgent: Water Distribution Schedule',
+      ar: 'عاجل: جدول توزيع المياه للمناطق الشمالية'
+    },
+    content: {
+      en: 'Water tanks will be distributed in the Al-Sikka area starting tomorrow at 8:00 AM. Please bring your containers.',
+      ar: 'سيتم توزيع خزانات المياه في منطقة السكة بدءاً من صباح الغد الساعة 8:00 صباحاً. يرجى إحضار الأوعية الخاصة بكم.'
+    }
+  },
+  {
+    id: '2',
+    date: '2024-03-12',
+    category: 'service',
+    title: {
+      en: 'New Registration Point Opened',
+      ar: 'افتتاح نقطة تسجيل جديدة للنازحين'
+    },
+    content: {
+      en: 'A new temporary office has been set up near the UNRWA school to help citizens register their displacement status.',
+      ar: 'تم افتتاح مكتب مؤقت بالقرب من مدرسة الوكالة لمساعدة المواطنين في تسجيل بيانات النزوح وتحديث أماكن تواجدهم.'
+    }
+  },
+  {
+    id: '3',
+    date: '2024-03-10',
+    category: 'general',
+    title: {
+      en: 'Warning Regarding Damaged Structures',
+      ar: 'تحذير هام بخصوص المباني الآيلة للسقوط'
+    },
+    content: {
+      en: 'Citizens are advised to stay away from partially destroyed buildings in the city center due to risk of collapse.',
+      ar: 'تهيب البلدية بالمواطنين الكرام عدم الاقتراب من المباني المدمرة جزئياً في وسط المدينة نظراً لخطورة انهيارها.'
+    }
+  },
+  {
+    id: '4',
+    date: '2024-03-08',
+    category: 'service',
+    title: {
+      en: 'Medical Waste Disposal Instructions',
+      ar: 'تعليمات التخلص من النفايات الطبية'
+    },
+    content: {
+      en: 'Please separate medical waste from general waste to ensure the safety of sanitation workers.',
+      ar: 'يرجى فصل النفايات الطبية عن النفايات العامة لضمان سلامة عمال النظافة ومنع انتشار الأمراض.'
+    }
+  }
 ];
 
 export const TRANSLATIONS = {
   en: {
     title: "Beit Hanoun Municipality",
-    subtitle: "Electronic Services Portal",
+    subtitle: "Emergency Services Portal",
     home: "Home",
     register: "Citizen Registration",
     contact: "Contact Us",
     admin: "Admin Portal",
-    welcome: "Welcome to Beit Hanoun Emergency Services Portal",
+    ads: "Announcements",
+    welcome: "Beit Hanoun Municipality Emergency Services Portal",
     welcomeDesc: "We strive to serve you by assessing damages, updating displacement records, and receiving urgent appeals during these critical times.",
-    btnRegister: "Register Data",
-    btnContact: "Contact Support",
+    btnRegister: "Citizen Registration",
+    btnContact: "Contact Us",
+    latestAds: "Latest Municipality Announcements",
+    viewAllAds: "View All Announcements",
+    noAds: "No announcements available at the moment.",
+    readMore: "Read More",
     formTitle: "Citizen Displacement & Status Form",
-    formDesc: "Please fill in accurate details regarding your current residence and family status.",
+    formDesc: "Please follow the steps to register your current status accurately.",
+    steps: {
+      1: "Personal Info",
+      2: "Residence Info",
+      3: "Family Info"
+    },
     fields: {
       fullName: "Full Name",
-      phone: "Phone Number",
-      whatsapp: "WhatsApp Number",
-      familyCount: "Number of Family Members",
-      currentLoc: "Current Place of Stay",
-      origAddress: "Original Address in Beit Hanoun",
+      idNumber: "ID Number",
+      phone: "Mobile Number",
+      whatsapp: "WhatsApp Number (Optional)",
+      
+      originalArea: "Original Area (Beit Hanoun)",
+      originalStreet: "Original Street Name",
+      originalAddressDetails: "Address Details",
+      currentEvacuationState: "Current Governorate",
+      evacuationType: "Type of Shelter",
+
+      wifeName: "Wife's Name",
+      wifeIdNumber: "Wife's ID Number",
+      familyCount: "Total Family Members",
+      males: "Number of Males",
+      females: "Number of Females",
+      notes: "Notes / Needs",
+
+      next: "Next Step",
+      back: "Previous",
       submit: "Submit Information",
       sending: "Submitting...",
     },
@@ -44,9 +141,20 @@ export const TRANSLATIONS = {
       subject: "Subject",
       message: "Message",
       send: "Send Message",
+      emergencyContacts: "Emergency Contacts",
+      contacts: [
+        { label: "Civil Defense", number: "102" },
+        { label: "Red Crescent", number: "101" },
+        { label: "Police", number: "100" },
+        { label: "Municipality Emergency", number: "115" },
+      ]
     },
     adminPanel: {
       title: "Administration Dashboard",
+      tabs: {
+        citizens: "Citizens Requests",
+        announcements: "Manage Announcements"
+      },
       totalCitizens: "Total Registered",
       pending: "Pending Review",
       recent: "Recent Submissions",
@@ -67,6 +175,19 @@ export const TRANSLATIONS = {
         statusUpdated: "Status updated and feedback sent!",
         contactInfo: "Contact Information",
         requestInfo: "Request Information"
+      },
+      announcements: {
+        add: "Add Announcement",
+        edit: "Edit Announcement",
+        delete: "Delete",
+        titleEn: "Title (English)",
+        titleAr: "Title (Arabic)",
+        contentEn: "Content (English)",
+        contentAr: "Content (Arabic)",
+        category: "Category",
+        date: "Date",
+        save: "Save Announcement",
+        confirmDelete: "Are you sure you want to delete this announcement?"
       }
     },
     login: {
@@ -81,7 +202,8 @@ export const TRANSLATIONS = {
       required: "This field is required",
       invalidEmail: "Please enter a valid email address",
       invalidPhone: "Please enter a valid phone number (9-15 digits)",
-      nameTooShort: "Name must be at least 3 characters",
+      invalidID: "Invalid ID Number",
+      nameTooShort: "Name must contain only letters and be at least 3 characters",
       feedbackRequired: "Feedback cannot be empty if you wish to send it"
     },
     footer: "© 2024 Beit Hanoun Municipality. All Rights Reserved.",
@@ -100,24 +222,48 @@ export const TRANSLATIONS = {
   },
   ar: {
     title: "بلدية بيت حانون",
-    subtitle: "بوابة الخدمات الإلكترونية",
+    subtitle: "بوابة الخدمات الطارئة",
     home: "الرئيسية",
     register: "تسجيل المواطنين",
     contact: "اتصل بنا",
     admin: "لوحة الإدارة",
-    welcome: "مرحباً بكم في بوابة الخدمات الطارئة لبلدية بيت حانون",
+    ads: "التعاميم والإعلانات",
+    welcome: "بوابة الخدمات الطارئة لبلدية بيت حانون",
     welcomeDesc: "نسعى لخدمتكم والتخفيف عنكم من خلال حصر الأضرار وتحديث بيانات النزوح واستقبال مناشداتكم العاجلة.",
-    btnRegister: "تسجيل البيانات",
-    btnContact: "الدعم الفني",
+    btnRegister: "تسجيل بيانات المواطنين",
+    btnContact: "تواصل معنا",
+    latestAds: "آخر إعلانات البلدية",
+    viewAllAds: "عرض جميع التعاميم",
+    noAds: "لا توجد إعلانات متاحة حالياً.",
+    readMore: "اقرأ المزيد",
     formTitle: "نموذج بيانات المواطنين والنزوح",
-    formDesc: "يرجى تعبئة بيانات دقيقة بخصوص مكان الإقامة الحالي ووضع العائلة.",
+    formDesc: "يرجى اتباع الخطوات لتسجيل حالتك الحالية بدقة.",
+    steps: {
+      1: "البيانات الشخصية",
+      2: "بيانات السكن والنزوح",
+      3: "البيانات العائلية"
+    },
     fields: {
       fullName: "الاسم الرباعي",
-      phone: "رقم الهاتف / الجوال",
-      whatsapp: "رقم الواتساب",
+      idNumber: "رقم الهوية",
+      phone: "رقم الجوال",
+      whatsapp: "رقم الواتساب (اختياري)",
+      
+      originalArea: "المنطقة الأصلية (بيت حانون)",
+      originalStreet: "اسم الشارع الأصلي",
+      originalAddressDetails: "تفاصيل العنوان",
+      currentEvacuationState: "محافظة النزوح الحالية",
+      evacuationType: "نوع مكان النزوح",
+
+      wifeName: "اسم الزوجة الرباعي",
+      wifeIdNumber: "رقم هوية الزوجة",
       familyCount: "عدد أفراد الأسرة",
-      currentLoc: "مكان الإقامة الحالي",
-      origAddress: "العنوان الأصلي في بيت حانون",
+      males: "عدد الذكور",
+      females: "عدد الإناث",
+      notes: "ملاحظات / احتياجات",
+
+      next: "التالي",
+      back: "السابق",
       submit: "إرسال البيانات",
       sending: "جاري الإرسال...",
     },
@@ -130,9 +276,20 @@ export const TRANSLATIONS = {
       subject: "الموضوع",
       message: "نص الرسالة",
       send: "إرسال الرسالة",
+      emergencyContacts: "أرقام الطوارئ الهامة",
+      contacts: [
+        { label: "الدفاع المدني", number: "102" },
+        { label: "الهلال الأحمر", number: "101" },
+        { label: "الشرطة", number: "100" },
+        { label: "طوارئ البلدية", number: "115" },
+      ]
     },
     adminPanel: {
       title: "لوحة التحكم الإدارية",
+      tabs: {
+        citizens: "طلبات المواطنين",
+        announcements: "إدارة الإعلانات"
+      },
       totalCitizens: "المسجلين",
       pending: "قيد المراجعة",
       recent: "أحدث الطلبات",
@@ -153,6 +310,19 @@ export const TRANSLATIONS = {
         statusUpdated: "تم تحديث الحالة وإرسال الملاحظات!",
         contactInfo: "معلومات الاتصال",
         requestInfo: "معلومات الطلب"
+      },
+      announcements: {
+        add: "إضافة إعلان جديد",
+        edit: "تعديل الإعلان",
+        delete: "حذف",
+        titleEn: "العنوان (إنجليزي)",
+        titleAr: "العنوان (عربي)",
+        contentEn: "المحتوى (إنجليزي)",
+        contentAr: "المحتوى (عربي)",
+        category: "التصنيف",
+        date: "التاريخ",
+        save: "حفظ الإعلان",
+        confirmDelete: "هل أنت متأكد من حذف هذا الإعلان؟"
       }
     },
     login: {
@@ -167,7 +337,8 @@ export const TRANSLATIONS = {
       required: "هذا الحقل مطلوب",
       invalidEmail: "يرجى إدخال بريد إلكتروني صحيح",
       invalidPhone: "يرجى إدخال رقم هاتف صحيح (9-15 رقم)",
-      nameTooShort: "الاسم يجب أن يكون 3 أحرف على الأقل",
+      invalidID: "يرجى إدخال رقم هوية صحيح",
+      nameTooShort: "الاسم يجب أن يحتوي على أحرف فقط (3 أحرف على الأقل)",
       feedbackRequired: "الملاحظات لا يمكن أن تكون فارغة"
     },
     footer: "© 2024 بلدية بيت حانون. جميع الحقوق محفوظة.",
