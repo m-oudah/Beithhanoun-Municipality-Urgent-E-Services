@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { User, Phone, Users, MapPin, Send, Home, MessageCircle, AlertCircle, ArrowLeft, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { Language } from '../types';
@@ -17,6 +18,7 @@ export const CitizenForm: React.FC<CitizenFormProps> = ({ lang }) => {
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [checkingId, setCheckingId] = useState(false);
   const [success, setSuccess] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -75,9 +77,26 @@ export const CitizenForm: React.FC<CitizenFormProps> = ({ lang }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleNext = () => {
-    if (step === 1 && validateStep1()) setStep(2);
-    else if (step === 2 && validateStep2()) setStep(3);
+  const handleNext = async () => {
+    if (step === 1) {
+      if (validateStep1()) {
+        setCheckingId(true);
+        try {
+          const exists = await ApiService.checkCitizenExists(formData.idNumber);
+          if (exists) {
+            setErrors(prev => ({ ...prev, idNumber: t.validation.idExists }));
+          } else {
+            setStep(2);
+          }
+        } catch (error) {
+          console.error("ID Check failed", error);
+        } finally {
+          setCheckingId(false);
+        }
+      }
+    } else if (step === 2 && validateStep2()) {
+      setStep(3);
+    }
   };
 
   const handleBack = () => {
@@ -248,7 +267,7 @@ export const CitizenForm: React.FC<CitizenFormProps> = ({ lang }) => {
                             >
                                 <option value="" disabled>{isRTL ? 'اختر المنطقة' : 'Select Area'}</option>
                                 {LOCATIONS.map(loc => (
-                                    <option key={loc} value={loc}>{loc}</option>
+                                    <option key={loc.value} value={loc.value}>{isRTL ? loc.ar : loc.en}</option>
                                 ))}
                             </select>
                             {errors.originalArea && <p className="text-red-500 text-xs">{errors.originalArea}</p>}
@@ -374,8 +393,8 @@ export const CitizenForm: React.FC<CitizenFormProps> = ({ lang }) => {
                             <input 
                                 type="number"
                                 min="0" 
-                                value={formData.males}
-                                onChange={(e) => setFormData({...formData, males: parseInt(e.target.value) || 0})}
+                                value={formData.males === 0 ? '' : formData.males}
+                                onChange={(e) => setFormData({...formData, males: e.target.value === '' ? 0 : parseInt(e.target.value)})}
                                 className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none transition"
                             />
                         </div>
@@ -384,8 +403,8 @@ export const CitizenForm: React.FC<CitizenFormProps> = ({ lang }) => {
                             <input 
                                 type="number"
                                 min="0" 
-                                value={formData.females}
-                                onChange={(e) => setFormData({...formData, females: parseInt(e.target.value) || 0})}
+                                value={formData.females === 0 ? '' : formData.females}
+                                onChange={(e) => setFormData({...formData, females: e.target.value === '' ? 0 : parseInt(e.target.value)})}
                                 className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none transition"
                             />
                         </div>
@@ -411,6 +430,7 @@ export const CitizenForm: React.FC<CitizenFormProps> = ({ lang }) => {
                     <button 
                         type="button" 
                         onClick={handleBack}
+                        disabled={checkingId || loading}
                         className="px-6 py-3 rounded-lg font-bold text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-slate-600 hover:bg-gray-100 dark:hover:bg-slate-700 transition flex items-center gap-2"
                     >
                         <ArrowBack size={18} />
@@ -424,10 +444,19 @@ export const CitizenForm: React.FC<CitizenFormProps> = ({ lang }) => {
                     <button 
                         type="button" 
                         onClick={handleNext}
-                        className="px-8 py-3 rounded-lg font-bold text-white bg-primary-600 hover:bg-primary-700 shadow-lg flex items-center gap-2 transition"
+                        disabled={checkingId}
+                        className={`px-8 py-3 rounded-lg font-bold text-white shadow-lg flex items-center gap-2 transition ${
+                          checkingId ? 'bg-slate-400 cursor-not-allowed' : 'bg-primary-600 hover:bg-primary-700'
+                        }`}
                     >
-                        {t.fields.next}
-                        <ArrowNext size={18} />
+                        {checkingId ? (
+                           <span>...</span>
+                        ) : (
+                          <>
+                             <span>{t.fields.next}</span>
+                             <ArrowNext size={18} />
+                          </>
+                        )}
                     </button>
                 ) : (
                     <button 

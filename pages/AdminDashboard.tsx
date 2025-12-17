@@ -1,6 +1,7 @@
+
 import React, { useEffect, useState } from 'react';
-import { Users, AlertCircle, CheckCircle, Lock, User, Key, LogOut, X, Phone, MessageCircle, MapPin, Send, MessageSquare, Megaphone, Edit, Trash2, Plus, Calendar } from 'lucide-react';
-import { Language, CitizenRecord, Announcement } from '../types';
+import { Users, AlertCircle, CheckCircle, Lock, User, Key, LogOut, X, Phone, MessageCircle, MapPin, Send, MessageSquare, Megaphone, Edit, Trash2, Plus, Calendar, FileSpreadsheet, Printer, Mail, Eye } from 'lucide-react';
+import { Language, CitizenRecord, Announcement, ContactMessage } from '../types';
 import { TRANSLATIONS } from '../constants';
 import { ApiService } from '../services/api';
 import { sanitizeInput } from '../utils/validation';
@@ -16,15 +17,19 @@ export const AdminDashboard: React.FC<AdminProps> = ({ lang }) => {
   const [error, setError] = useState('');
   
   // Dashboard Tabs
-  const [activeTab, setActiveTab] = useState<'citizens' | 'announcements'>('citizens');
+  const [activeTab, setActiveTab] = useState<'registry' | 'messages' | 'announcements'>('registry');
 
-  // Citizen State
+  // Registry (Citizens) State
   const [citizens, setCitizens] = useState<CitizenRecord[]>([]);
   const [selectedCitizen, setSelectedCitizen] = useState<CitizenRecord | null>(null);
   const [adminFeedback, setAdminFeedback] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<CitizenRecord['status']>('pending');
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateMessage, setUpdateMessage] = useState('');
+
+  // Messages (Inquiries) State
+  const [messages, setMessages] = useState<ContactMessage[]>([]);
+  const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null);
 
   // Announcement State
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
@@ -36,8 +41,10 @@ export const AdminDashboard: React.FC<AdminProps> = ({ lang }) => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      if (activeTab === 'citizens') {
+      if (activeTab === 'registry') {
         ApiService.getCitizens().then(setCitizens);
+      } else if (activeTab === 'messages') {
+        ApiService.getContactMessages().then(setMessages);
       } else {
         ApiService.getAnnouncements().then(setAnnouncements);
       }
@@ -60,16 +67,44 @@ export const AdminDashboard: React.FC<AdminProps> = ({ lang }) => {
     setCitizens([]);
   };
 
+  // --- Export & Print Functions ---
+  const downloadCSV = () => {
+    if (citizens.length === 0) return;
+    
+    // Included all fields in export including hidden ones (Wife Name, Notes, Original Address)
+    const headers = [
+      'Full Name', 'ID Number', 'Phone', 'Original Area', 'Original Street', 'Address Details',
+      'Current State', 'Evacuation Type', 'Wife Name', 'Family Members', 'Males', 'Females', 'Notes', 'Status'
+    ];
+
+    const rows = citizens.map(c => [
+      `"${c.fullName}"`, `"${c.idNumber}"`, `"${c.phone}"`, `"${c.originalArea}"`, `"${c.originalStreet}"`, `"${c.originalAddressDetails || ''}"`,
+      `"${c.currentEvacuationState}"`, `"${c.evacuationType}"`, `"${c.wifeName}"`, c.familyMembers, c.males, c.females, `"${c.notes || ''}"`, c.status
+    ]);
+
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + headers.join(",") + "\n" 
+      + rows.map(e => e.join(",")).join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `citizens_registry_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
   // --- Citizen Logic ---
   const openCitizenModal = (citizen: CitizenRecord) => {
     setSelectedCitizen(citizen);
     setSelectedStatus(citizen.status);
     setAdminFeedback(citizen.adminFeedback || '');
     setUpdateMessage('');
-  };
-
-  const closeModal = () => {
-    setSelectedCitizen(null);
   };
 
   const handleUpdateRecord = async () => {
@@ -199,11 +234,29 @@ export const AdminDashboard: React.FC<AdminProps> = ({ lang }) => {
     );
   }
 
-  const pendingCount = citizens.filter(c => c.status === 'pending').length;
-
   return (
     <div className="container mx-auto px-4 py-8 relative">
-      <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+      <style>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          .printable-table, .printable-table * {
+            visibility: visible;
+          }
+          .printable-table {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+          }
+          .no-print {
+            display: none !important;
+          }
+        }
+      `}</style>
+
+      <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 no-print">
         <div>
           <h2 className="text-2xl font-bold text-gray-800 dark:text-white">{t.adminPanel.title}</h2>
           <span className="inline-block mt-1 px-3 py-0.5 bg-primary-100 dark:bg-primary-900/50 text-primary-800 dark:text-primary-300 rounded-full text-xs font-bold uppercase tracking-wider">
@@ -220,121 +273,142 @@ export const AdminDashboard: React.FC<AdminProps> = ({ lang }) => {
       </div>
 
       {/* TABS */}
-      <div className="flex gap-4 mb-8 border-b border-gray-200 dark:border-slate-700">
+      <div className="flex flex-wrap gap-4 mb-8 border-b border-gray-200 dark:border-slate-700 no-print">
         <button 
-          onClick={() => setActiveTab('citizens')}
-          className={`px-6 py-3 font-bold border-b-2 transition flex items-center gap-2 ${activeTab === 'citizens' ? 'border-primary-600 text-primary-600 dark:text-primary-400' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+          onClick={() => setActiveTab('registry')}
+          className={`px-4 md:px-6 py-3 font-bold border-b-2 transition flex items-center gap-2 ${activeTab === 'registry' ? 'border-primary-600 text-primary-600 dark:text-primary-400' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
         >
-          <Users size={18} />
-          {t.adminPanel.tabs.citizens}
+          <FileSpreadsheet size={18} />
+          {t.adminPanel.tabs.registry}
+        </button>
+        <button 
+          onClick={() => setActiveTab('messages')}
+          className={`px-4 md:px-6 py-3 font-bold border-b-2 transition flex items-center gap-2 ${activeTab === 'messages' ? 'border-primary-600 text-primary-600 dark:text-primary-400' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+        >
+          <Mail size={18} />
+          {t.adminPanel.tabs.messages}
         </button>
         <button 
           onClick={() => setActiveTab('announcements')}
-          className={`px-6 py-3 font-bold border-b-2 transition flex items-center gap-2 ${activeTab === 'announcements' ? 'border-primary-600 text-primary-600 dark:text-primary-400' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+          className={`px-4 md:px-6 py-3 font-bold border-b-2 transition flex items-center gap-2 ${activeTab === 'announcements' ? 'border-primary-600 text-primary-600 dark:text-primary-400' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
         >
           <Megaphone size={18} />
           {t.adminPanel.tabs.announcements}
         </button>
       </div>
 
-      {activeTab === 'citizens' ? (
-        <>
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow border-l-4 border-blue-500 transition-colors">
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">{t.adminPanel.totalCitizens}</p>
-                  <h3 className="text-3xl font-bold text-gray-800 dark:text-white">{citizens.length}</h3>
+      {/* TAB: DISPLACEMENT REGISTRY (FULL DATA) */}
+      {activeTab === 'registry' && (
+        <div className="printable-table">
+            <div className="flex justify-between items-center mb-4 no-print">
+                <h3 className="text-lg font-bold text-gray-800 dark:text-white">{t.adminPanel.totalCitizens}: {citizens.length}</h3>
+                <div className="flex gap-2">
+                    <button onClick={downloadCSV} className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-semibold">
+                        <FileSpreadsheet size={16} /> {t.adminPanel.exportExcel}
+                    </button>
+                    <button onClick={handlePrint} className="flex items-center gap-2 px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 text-sm font-semibold">
+                        <Printer size={16} /> {t.adminPanel.printPdf}
+                    </button>
                 </div>
-                <div className="p-3 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full">
-                  <Users size={24} />
-                </div>
-              </div>
             </div>
 
-            <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow border-l-4 border-yellow-500 transition-colors">
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">{t.adminPanel.pending}</p>
-                  <h3 className="text-3xl font-bold text-gray-800 dark:text-white">{pendingCount}</h3>
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow overflow-hidden border border-gray-200 dark:border-slate-700">
+                <div className="overflow-x-auto">
+                <table className="w-full text-xs md:text-sm text-left whitespace-nowrap">
+                    <thead className="bg-gray-100 dark:bg-slate-900 text-gray-700 dark:text-gray-300 font-bold uppercase tracking-wider">
+                    <tr>
+                        <th className="px-4 py-3 text-center">#</th>
+                        <th className={`px-4 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.adminPanel.table.name}</th>
+                        <th className={`px-4 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.adminPanel.table.idNumber}</th>
+                        <th className={`px-4 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.adminPanel.table.phone}</th>
+                        {/* Hidden Original Address from table view but kept in export */}
+                        <th className={`px-4 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.fields.currentLoc}</th>
+                        <th className={`px-4 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.adminPanel.table.family}</th>
+                        {/* Hidden Wife Name from table view but kept in export */}
+                        {/* Hidden Notes from table view but kept in export */}
+                        <th className="px-4 py-3 no-print">{t.adminPanel.table.actions}</th>
+                    </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
+                    {citizens.map((citizen, idx) => (
+                        <tr key={citizen.id} className="hover:bg-gray-50 dark:hover:bg-slate-700/50 transition">
+                            <td className="px-4 py-3 text-center text-gray-500">{idx + 1}</td>
+                            <td className={`px-4 py-3 font-medium text-gray-900 dark:text-white ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{citizen.fullName}</td>
+                            <td className={`px-4 py-3 text-gray-600 dark:text-gray-300 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{citizen.idNumber}</td>
+                            <td className={`px-4 py-3 text-gray-600 dark:text-gray-300 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{citizen.phone}</td>
+                            <td className={`px-4 py-3 text-gray-600 dark:text-gray-300 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{citizen.currentEvacuationState} ({citizen.evacuationType})</td>
+                            <td className={`px-4 py-3 text-gray-600 dark:text-gray-300 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{citizen.familyMembers} (M:{citizen.males}/F:{citizen.females})</td>
+                            <td className="px-4 py-3 no-print">
+                                <button 
+                                    onClick={() => openCitizenModal(citizen)}
+                                    className="text-blue-600 hover:text-blue-800 dark:text-blue-400 flex items-center gap-1 text-xs font-bold border border-blue-200 dark:border-blue-900 px-2 py-1 rounded"
+                                >
+                                    <Edit size={14} /> Update
+                                </button>
+                            </td>
+                        </tr>
+                    ))}
+                    </tbody>
+                </table>
                 </div>
-                <div className="p-3 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 rounded-full">
-                  <AlertCircle size={24} />
-                </div>
-              </div>
             </div>
+        </div>
+      )}
 
-            <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow border-l-4 border-primary-500 transition-colors">
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">{lang === 'en' ? 'Verified Families' : 'عائلات تم التحقق منها'}</p>
-                  <h3 className="text-3xl font-bold text-gray-800 dark:text-white">{citizens.filter(c => c.status === 'verified').length}</h3>
-                </div>
-                <div className="p-3 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full">
-                  <CheckCircle size={24} />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Table */}
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow overflow-hidden transition-colors">
+      {/* TAB: MESSAGES / INQUIRIES (MODIFIED) */}
+      {activeTab === 'messages' && (
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow overflow-hidden transition-colors">
             <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-700">
-              <h3 className="font-bold text-gray-800 dark:text-white">{t.adminPanel.recent}</h3>
+                <h3 className="font-bold text-gray-800 dark:text-white">{t.adminPanel.tabs.messages}</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
                 <thead className="bg-gray-50 dark:bg-slate-900/50 text-gray-600 dark:text-gray-400 font-medium">
                   <tr>
                     <th className={`px-6 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.adminPanel.table.name}</th>
-                    <th className={`px-6 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.adminPanel.table.location}</th>
-                    <th className={`px-6 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.adminPanel.table.family}</th>
-                    <th className={`px-6 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.adminPanel.table.status}</th>
+                    <th className={`px-6 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.adminPanel.table.subject}</th>
+                    <th className={`px-6 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.adminPanel.table.phone}</th>
+                    <th className={`px-6 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.adminPanel.table.date}</th>
+                    <th className={`px-6 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.adminPanel.table.actions}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
-                  {citizens.map((citizen) => (
+                  {messages.map((msg) => (
                     <tr 
-                      key={citizen.id} 
+                      key={msg.id} 
                       className="hover:bg-gray-50 dark:hover:bg-slate-700/50 transition cursor-pointer"
-                      onClick={() => openCitizenModal(citizen)}
+                      onClick={() => setSelectedMessage(msg)}
                     >
                       <td className={`px-6 py-4 font-medium text-gray-900 dark:text-white ${lang === 'ar' ? 'text-right' : 'text-left'}`}>
-                        <div className="flex flex-col">
-                          <span className="text-primary-600 dark:text-primary-400 hover:underline">{citizen.fullName}</span>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">{citizen.phone}</span>
-                        </div>
+                        {msg.name}
+                        {msg.status === 'unread' && <span className="ml-2 w-2 h-2 bg-red-500 rounded-full inline-block"></span>}
                       </td>
-                      <td className={`px-6 py-4 text-gray-600 dark:text-gray-300 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{citizen.currentLocation}</td>
-                      <td className={`px-6 py-4 text-gray-600 dark:text-gray-300 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{citizen.familyMembers}</td>
+                      <td className={`px-6 py-4 text-gray-600 dark:text-gray-300 font-semibold ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{msg.subject}</td>
+                      <td className={`px-6 py-4 text-gray-600 dark:text-gray-300 font-mono ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{msg.whatsapp}</td>
+                      <td className={`px-6 py-4 text-gray-500 text-xs ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{msg.submittedAt}</td>
                       <td className={`px-6 py-4 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          citizen.status === 'verified' ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300' :
-                          citizen.status === 'urgent' ? 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300' :
-                          'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300'
-                        }`}>
-                          {citizen.status.toUpperCase()}
-                        </span>
+                        <button className="text-primary-600 hover:text-primary-800">
+                            <Eye size={18} />
+                        </button>
                       </td>
                     </tr>
                   ))}
-                  {citizens.length === 0 && (
+                  {messages.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="px-6 py-8 text-center text-gray-400 dark:text-gray-500">
-                        No records found.
+                      <td colSpan={5} className="px-6 py-8 text-center text-gray-400 dark:text-gray-500">
+                        No messages found.
                       </td>
                     </tr>
                   )}
                 </tbody>
               </table>
             </div>
-          </div>
-        </>
-      ) : (
-        <>
-          {/* Announcements Manager */}
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow overflow-hidden transition-colors">
+        </div>
+      )}
+
+      {/* TAB: ANNOUNCEMENTS */}
+      {activeTab === 'announcements' && (
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow overflow-hidden transition-colors">
             <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-700 flex justify-between items-center">
               <h3 className="font-bold text-gray-800 dark:text-white">{t.adminPanel.tabs.announcements}</h3>
               <button 
@@ -385,94 +459,22 @@ export const AdminDashboard: React.FC<AdminProps> = ({ lang }) => {
                 </tbody>
               </table>
             </div>
-          </div>
-        </>
+        </div>
       )}
 
-      {/* Citizen Detail Modal */}
+      {/* Citizen Update Modal */}
       {selectedCitizen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col">
-            
-            {/* Modal Header */}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm no-print">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
             <div className="bg-primary-600 dark:bg-slate-900 p-6 flex justify-between items-center text-white shrink-0">
-              <div className="flex items-center gap-3">
-                <User size={24} />
-                <h3 className="text-xl font-bold">{t.adminPanel.modal.title}</h3>
-              </div>
-              <button onClick={closeModal} className="p-2 hover:bg-white/20 rounded-full transition">
+              <h3 className="text-xl font-bold">{t.adminPanel.modal.updateStatus}</h3>
+              <button onClick={() => setSelectedCitizen(null)} className="p-2 hover:bg-white/20 rounded-full transition">
                 <X size={24} />
               </button>
             </div>
-
-            {/* Modal Body */}
-            <div className="p-6 overflow-y-auto grow">
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                {/* Contact Info */}
-                <div>
-                  <h4 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4 border-b border-gray-200 dark:border-slate-700 pb-2">
-                    {t.adminPanel.modal.contactInfo}
-                  </h4>
-                  <div className="space-y-4">
-                    <div className="flex items-start gap-3">
-                      <User className="text-primary-500 mt-1" size={18} />
-                      <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{t.fields.fullName}</p>
-                        <p className="font-semibold text-gray-800 dark:text-white">{selectedCitizen.fullName}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <Phone className="text-primary-500 mt-1" size={18} />
-                      <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{t.fields.phone}</p>
-                        <p className="font-semibold text-gray-800 dark:text-white" dir="ltr">{selectedCitizen.phone}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <MessageCircle className="text-green-500 mt-1" size={18} />
-                      <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{t.fields.whatsapp}</p>
-                        <p className="font-semibold text-gray-800 dark:text-white" dir="ltr">{selectedCitizen.whatsapp}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Request Info */}
-                <div>
-                  <h4 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4 border-b border-gray-200 dark:border-slate-700 pb-2">
-                    {t.adminPanel.modal.requestInfo}
-                  </h4>
-                  <div className="space-y-4">
-                    <div className="flex items-start gap-3">
-                      <MapPin className="text-primary-500 mt-1" size={18} />
-                      <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{t.fields.currentLoc}</p>
-                        <p className="font-semibold text-gray-800 dark:text-white">{selectedCitizen.currentLocation}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <Users className="text-primary-500 mt-1" size={18} />
-                      <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{t.fields.familyCount}</p>
-                        <p className="font-semibold text-gray-800 dark:text-white">{selectedCitizen.familyMembers}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <div className="mt-1"><MapPin className="text-secondary-500" size={18} /></div>
-                      <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{t.fields.origAddress}</p>
-                        <p className="font-semibold text-gray-800 dark:text-white">{selectedCitizen.originalAddress}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Action Section */}
-              <div className="bg-gray-50 dark:bg-slate-900/50 p-6 rounded-xl border border-gray-200 dark:border-slate-700">
-                <div className="mb-6">
+            <div className="p-6">
+                 <p className="mb-4 font-bold text-gray-800 dark:text-white text-lg">{selectedCitizen.fullName}</p>
+                 <div className="mb-4">
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">{t.adminPanel.modal.updateStatus}</label>
                   <select 
                     value={selectedStatus}
@@ -485,66 +487,77 @@ export const AdminDashboard: React.FC<AdminProps> = ({ lang }) => {
                     <option value="completed">Completed</option>
                   </select>
                 </div>
-
                 <div className="mb-4">
-                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
-                    <MessageSquare size={16} />
-                    {t.adminPanel.modal.feedback}
-                  </label>
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">{t.adminPanel.modal.feedback}</label>
                   <textarea 
                     value={adminFeedback}
                     onChange={(e) => setAdminFeedback(e.target.value)}
                     placeholder={t.adminPanel.modal.feedbackPlaceholder}
                     rows={4}
-                    maxLength={500}
                     className="w-full p-3 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none resize-none"
                   ></textarea>
-                  <p className="text-xs text-gray-500 mt-2">
-                    {lang === 'en' 
-                      ? '* This feedback will be sent via Email and WhatsApp.' 
-                      : '* سيتم إرسال هذه الملاحظات عبر البريد الإلكتروني والواتساب.'}
-                  </p>
                 </div>
-                
-                {updateMessage && (
-                  <div className="mb-4 p-3 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-lg flex items-center gap-2 text-sm">
-                    <CheckCircle size={16} />
-                    <span>{updateMessage}</span>
-                  </div>
-                )}
-
-                <div className="flex gap-4 pt-2">
-                  <button 
+                {updateMessage && <div className="mb-4 text-green-600 font-bold">{updateMessage}</div>}
+                <button 
                     onClick={handleUpdateRecord}
                     disabled={isUpdating}
-                    className="flex-1 py-3 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-lg shadow transition flex justify-center items-center gap-2"
-                  >
-                    {isUpdating ? (
-                      <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                    ) : (
-                      <>
-                        <Send size={18} />
-                        <span>{t.adminPanel.modal.sendFeedback}</span>
-                      </>
-                    )}
-                  </button>
-                  <button 
-                    onClick={closeModal}
-                    className="px-6 py-3 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 font-semibold rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition"
-                  >
-                    {t.adminPanel.modal.close}
-                  </button>
-                </div>
-              </div>
-
+                    className="w-full py-3 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-lg shadow"
+                >
+                    {isUpdating ? "Saving..." : t.adminPanel.modal.sendFeedback}
+                </button>
             </div>
           </div>
         </div>
       )}
 
+      {/* Message View Modal */}
+      {selectedMessage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm no-print">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
+                <div className="bg-slate-700 dark:bg-slate-900 p-6 flex justify-between items-center text-white shrink-0">
+                    <h3 className="text-xl font-bold">{t.adminPanel.modal.messageDetails}</h3>
+                    <button onClick={() => setSelectedMessage(null)} className="p-2 hover:bg-white/20 rounded-full transition">
+                        <X size={24} />
+                    </button>
+                </div>
+                <div className="p-6 space-y-4 text-gray-800 dark:text-gray-200">
+                    <div>
+                        <span className="block text-xs uppercase text-gray-500 font-bold">{t.adminPanel.table.name}</span>
+                        <p className="text-lg font-semibold">{selectedMessage.name}</p>
+                    </div>
+                    <div>
+                        <span className="block text-xs uppercase text-gray-500 font-bold">Email</span>
+                        <p className="text-base font-mono">{selectedMessage.email}</p>
+                    </div>
+                    <div>
+                        <span className="block text-xs uppercase text-gray-500 font-bold">{t.adminPanel.table.phone}</span>
+                        <p className="text-base font-mono">{selectedMessage.whatsapp}</p>
+                    </div>
+                    <div className="border-t border-gray-200 dark:border-slate-700 pt-3">
+                        <span className="block text-xs uppercase text-gray-500 font-bold mb-1">{t.adminPanel.table.subject}</span>
+                        <p className="font-bold">{selectedMessage.subject}</p>
+                    </div>
+                    <div className="bg-gray-50 dark:bg-slate-900/50 p-4 rounded-lg">
+                        <p className="whitespace-pre-wrap">{selectedMessage.message}</p>
+                    </div>
+                    <div className="flex justify-end pt-2">
+                        <a 
+                            href={`https://wa.me/${selectedMessage.whatsapp?.replace(/[^0-9]/g, '')}`} 
+                            target="_blank" 
+                            rel="noreferrer"
+                            className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-bold hover:bg-green-700"
+                        >
+                            <MessageCircle size={16} /> Reply via WhatsApp
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+      )}
+
       {/* Announcement Modal */}
       {isAdModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm no-print">
           <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col">
             <div className="bg-primary-600 dark:bg-slate-900 p-6 flex justify-between items-center text-white shrink-0">
               <h3 className="text-xl font-bold">

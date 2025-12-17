@@ -1,3 +1,5 @@
+
+
 import { CitizenRecord, ContactMessage, Announcement } from '../types';
 import { MOCK_ANNOUNCEMENTS } from '../constants';
 
@@ -21,10 +23,58 @@ export const ApiService = {
     return newRecord;
   },
 
-  async sendContactMessage(data: ContactMessage): Promise<boolean> {
+  async checkCitizenExists(idNumber: string): Promise<boolean> {
+    await delay(300);
+    // Reuse getCitizens logic to ensure consistency between mock data and local storage
+    const citizens = await ApiService.getCitizens();
+    return citizens.some(c => c.idNumber === idNumber);
+  },
+
+  async sendContactMessage(data: Omit<ContactMessage, 'id' | 'submittedAt' | 'status'>): Promise<boolean> {
     await delay(800);
     console.log("Sending email to info@beithanoun.ps", data);
+    
+    const newMessage: ContactMessage = {
+      ...data,
+      id: Math.random().toString(36).substr(2, 9),
+      submittedAt: new Date().toISOString().split('T')[0],
+      status: 'unread'
+    };
+
+    const existing = JSON.parse(localStorage.getItem('messages') || '[]');
+    localStorage.setItem('messages', JSON.stringify([newMessage, ...existing]));
+
     return true;
+  },
+
+  async getContactMessages(): Promise<ContactMessage[]> {
+    await delay(500);
+    const existing = JSON.parse(localStorage.getItem('messages') || '[]');
+    if (existing.length === 0) {
+        return [
+            {
+                id: '101',
+                name: 'Mahmoud Abbas',
+                email: 'mahmoud@example.com',
+                whatsapp: '0599111222',
+                subject: 'Electricity connection inquiry',
+                message: 'We have returned to Al-Sikka street, is the electricity line available?',
+                submittedAt: '2024-03-20',
+                status: 'unread'
+            },
+            {
+                id: '102',
+                name: 'Samira Khalil',
+                email: 'samira@example.com',
+                whatsapp: '0599333444',
+                subject: 'Aid Distribution',
+                message: 'When is the next flour distribution cycle for Al-Karama area?',
+                submittedAt: '2024-03-19',
+                status: 'read'
+            }
+        ];
+    }
+    return existing;
   },
 
   async getCitizens(): Promise<CitizenRecord[]> {

@@ -1,6 +1,8 @@
+
+
 import React, { useEffect, useState } from 'react';
-import { ArrowRight, ArrowLeft, Building2, Users2, ShieldCheck, Megaphone, Calendar, ChevronRight, ChevronLeft } from 'lucide-react';
-import { TRANSLATIONS } from '../constants';
+import { ArrowRight, ArrowLeft, Building2, Users2, ShieldCheck, Megaphone, Calendar, ChevronRight, ChevronLeft, Heart, Stethoscope, GraduationCap, TreeDeciduous, Zap } from 'lucide-react';
+import { TRANSLATIONS, STATISTICS_DATA } from '../constants';
 import { Language, Announcement } from '../types';
 import { ApiService } from '../services/api';
 
@@ -29,6 +31,18 @@ export const Home: React.FC<HomeProps> = ({ lang, setPage }) => {
     };
     fetchAds();
   }, []);
+
+  const getStatIcon = (key: string) => {
+    switch (key) {
+      case 'martyrs': return <Heart size={24} className="text-red-500" />;
+      case 'buildings': return <Building2 size={24} className="text-orange-500" />;
+      case 'hospitals': return <Stethoscope size={24} className="text-blue-500" />;
+      case 'schools': return <GraduationCap size={24} className="text-yellow-500" />;
+      case 'green': return <TreeDeciduous size={24} className="text-green-500" />;
+      case 'infra': return <Zap size={24} className="text-purple-500" />;
+      default: return <Building2 size={24} />;
+    }
+  };
 
   return (
     <div className="flex flex-col">
@@ -80,7 +94,7 @@ export const Home: React.FC<HomeProps> = ({ lang, setPage }) => {
           </div>
 
           <div 
-            onClick={() => {}} // Placeholder for now, could link to a reconstruction page if it existed
+            onClick={() => {}} // Placeholder
             className="cursor-pointer bg-white dark:bg-slate-800 p-8 rounded-xl shadow-lg border-b-4 border-secondary-500 transition-all group hover:transform hover:-translate-y-1 hover:shadow-xl duration-300"
           >
             <div className="w-14 h-14 bg-red-100 dark:bg-red-900/30 text-secondary-600 dark:text-red-400 rounded-full flex items-center justify-center mb-6 group-hover:bg-secondary-600 group-hover:text-white transition">
@@ -111,7 +125,56 @@ export const Home: React.FC<HomeProps> = ({ lang, setPage }) => {
         </div>
       </div>
 
-      {/* Announcements Section (Moved to bottom) */}
+      {/* STATISTICS SECTION */}
+      <div className="bg-slate-950 text-white py-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-10 max-w-3xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 font-cairo text-red-500">
+              {t.stats.title}
+            </h2>
+            <p className="text-lg text-slate-400">
+              {t.stats.subtitle}
+            </p>
+          </div>
+          
+          <div className={`flex flex-col gap-8 items-stretch ${isRTL ? 'lg:flex-row-reverse' : 'lg:flex-row'}`}>
+            {/* Map Column */}
+            <div className="w-full lg:w-1/3 min-h-[300px] lg:min-h-full rounded-2xl overflow-hidden border border-slate-800 shadow-2xl relative">
+              <iframe 
+                width="100%" 
+                height="100%" 
+                className="absolute inset-0"
+                frameBorder="0" 
+                scrolling="no" 
+                marginHeight={0} 
+                marginWidth={0} 
+                src="https://maps.google.com/maps?q=Beit%20Hanoun&t=&z=14&ie=UTF8&iwloc=&output=embed&hl=en"
+                title="Beit Hanoun Map"
+                style={{ filter: 'grayscale(100%) invert(90%) hue-rotate(180deg)' }}
+              ></iframe>
+            </div>
+
+            {/* Stats Grid Column */}
+            <div className="w-full lg:w-2/3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+              {STATISTICS_DATA.map((stat) => (
+                <div key={stat.key} className="bg-slate-900/50 p-4 rounded-xl border border-slate-800 hover:border-slate-600 transition duration-300 flex items-center gap-4 group">
+                  <div className="p-3 bg-slate-950 rounded-lg shadow-inner group-hover:scale-105 transition-transform duration-300 shrink-0">
+                    {getStatIcon(stat.key)}
+                  </div>
+                  <div>
+                    <div className="text-xl font-bold mb-0.5 font-mono tracking-tight text-white">{stat.value}</div>
+                    <div className="text-xs text-slate-400 uppercase tracking-wider font-semibold">
+                      {t.stats[stat.key as keyof typeof t.stats]}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Announcements Section */}
       <div className="bg-slate-100 dark:bg-slate-900/50 py-12">
         <div className="container mx-auto px-4 relative z-20">
             <div className="flex justify-between items-center mb-6">

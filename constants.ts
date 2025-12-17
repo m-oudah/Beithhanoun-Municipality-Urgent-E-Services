@@ -1,14 +1,15 @@
 
+
 import { Language, Announcement } from './types';
 
 export const LOCATIONS = [
-  "Beit Hanoun - Center",
-  "Beit Hanoun - Izbat Beit Hanoun",
-  "Beit Hanoun - Al-Karama",
-  "Beit Hanoun - Al-Sikka",
-  "Beit Hanoun - Towers",
-  "Beit Hanoun - Al-Amal",
-  "Beit Hanoun - Al-Zaytun"
+  { value: "Beit Hanoun - Center", en: "Beit Hanoun - Center", ar: "بيت حانون - البلد / المركز" },
+  { value: "Beit Hanoun - Izbat Beit Hanoun", en: "Beit Hanoun - Izbat Beit Hanoun", ar: "بيت حانون - عزبة بيت حانون" },
+  { value: "Beit Hanoun - Al-Karama", en: "Beit Hanoun - Al-Karama", ar: "بيت حانون - منطقة الكرامة" },
+  { value: "Beit Hanoun - Al-Sikka", en: "Beit Hanoun - Al-Sikka", ar: "بيت حانون - شارع السكة" },
+  { value: "Beit Hanoun - Towers", en: "Beit Hanoun - Towers", ar: "بيت حانون - الأبراج (الندى/العودة)" },
+  { value: "Beit Hanoun - Al-Amal", en: "Beit Hanoun - Al-Amal", ar: "بيت حانون - حي الأمل" },
+  { value: "Beit Hanoun - Al-Zaytun", en: "Beit Hanoun - Al-Zaytun", ar: "بيت حانون - حي الزيتون" }
 ];
 
 export const EVACUATION_TYPES = [
@@ -28,6 +29,74 @@ export const EVACUATION_STATES = [
   { id: 'rafah', en: 'Rafah', ar: 'رفح' },
   { id: 'outside', en: 'Outside Gaza', ar: 'خارج القطاع' }
 ];
+
+export const RELIEF_ORGANIZATIONS = [
+  {
+    id: 'unrwa',
+    name: { en: 'UNRWA', ar: 'وكالة الأونروا' },
+    desc: { en: 'The United Nations Relief and Works Agency for Palestine Refugees.', ar: 'وكالة الأمم المتحدة لإغاثة وتشغيل اللاجئين الفلسطينيين.' },
+    url: 'https://gazaaid.unrwa.org/Login',
+    color: 'text-blue-600'
+  },
+  {
+    id: 'unicef',
+    name: { en: 'UNICEF', ar: 'اليونيسيف' },
+    desc: { en: 'Working for every child, everywhere, to build a better world.', ar: 'تعمل من أجل كل طفل، في كل مكان، لبناء عالم أفضل.' },
+    url: 'https://www.unicef.org/sop/',
+    color: 'text-cyan-500'
+  },
+  {
+    id: 'wfp',
+    name: { en: 'World Food Programme', ar: 'برنامج الغذاء العالمي' },
+    desc: { en: 'The world’s largest humanitarian organization saving lives in emergencies.', ar: 'أكبر منظمة إنسانية في العالم تنقذ الأرواح في حالات الطوارئ.' },
+    url: 'https://pal.beneficiaryregistration.cbt.wfp.org/registration',
+    color: 'text-blue-700'
+  },
+  {
+    id: 'mosa',
+    name: { en: 'Ministry of Social Development', ar: 'وزارة التنمية الاجتماعية' },
+    desc: { en: 'Leading the social sector to protect the poor and vulnerable.', ar: 'قيادة القطاع الاجتماعي لحماية الفقراء والفئات المهمشة.' },
+    url: 'https://donate.mosd.gov.ps/war-form',
+    color: 'text-green-600'
+  },
+  {
+    id: 'save',
+    name: { en: 'Save the Children', ar: 'مؤسسة إنقاذ الطفل' },
+    desc: { en: 'Championing the rights and interests of children worldwide.', ar: 'الدفاع عن حقوق ومصالح الأطفال في جميع أنحاء العالم.' },
+    url: 'https://kobo-ee.savethechildren.net/x/hwIkg8AM',
+    color: 'text-red-600'
+  },
+  {
+    id: 'gas',
+    name: { en: 'Cooking Gas Registration', ar: 'رابط غاز الطهي' },
+    desc: { en: 'Registration for cooking gas distribution in Gaza governorates.', ar: 'رابط التسجيل لتعبئة وتوزيع غاز الطهي في محافظات غزة.' },
+    url: 'https://e-gaza.com/login',
+    color: 'text-orange-600'
+  }
+];
+
+export const WAR_STATS = {
+  overview: {
+    en: "The 2023-2024 aggression on Beit Hanoun resulted in unprecedented destruction, effectively erasing major parts of the city. The municipality estimates indicate that over 90% of the city's infrastructure and residential buildings have been destroyed or severely damaged, rendering the city uninhabitable.",
+    ar: "أدى العدوان الإسرائيلي على مدينة بيت حانون في 2023-2024 إلى دمار غير مسبوق، مما أدى فعلياً إلى مسح أجزاء كبيرة من المدينة. تشير تقديرات البلدية إلى أن أكثر من 90% من البنية التحتية والمباني السكنية في المدينة قد دمرت بالكامل أو تضررت بشكل بليغ، مما جعل المدينة غير صالحة للسكن."
+  },
+  stats: [
+    { key: 'martyrs', en: "Martyrs", ar: "الشهداء", value: "1,250+" },
+    { key: 'injured', en: "Injured", ar: "الجرحى", value: "3,500+" },
+    { key: 'destroyed_homes', en: "Destroyed Homes (Total)", ar: "وحدات سكنية (دمار كلي)", value: "3,800" },
+    { key: 'damaged_homes', en: "Damaged Homes (Partial)", ar: "وحدات متضررة (جزئي)", value: "6,500" },
+    { key: 'schools', en: "Schools Destroyed/Damaged", ar: "مدارس مدمرة/متضررة", value: "12" },
+    { key: 'mosques', en: "Mosques Destroyed", ar: "مساجد مدمرة", value: "15" },
+    { key: 'displaced', en: "Displaced Population", ar: "نسبة النزوح", value: "98%" },
+    { key: 'infra', en: "Infrastructure Damage", ar: "دمار البنية التحتية", value: "95%" },
+  ],
+  sources: [
+    { en: "Beit Hanoun Municipality - Emergency Committee", ar: "بلدية بيت حانون - لجنة الطوارئ" },
+    { en: "Palestinian Ministry of Health", ar: "وزارة الصحة الفلسطينية" },
+    { en: "UNRWA Situation Reports", ar: "تقارير تقييم الأونروا" },
+    { en: "Euro-Med Human Rights Monitor", ar: "المرصد الأورومتوسطي لحقوق الإنسان" }
+  ]
+};
 
 export const MOCK_ANNOUNCEMENTS: Announcement[] = [
   {
@@ -84,6 +153,15 @@ export const MOCK_ANNOUNCEMENTS: Announcement[] = [
   }
 ];
 
+export const STATISTICS_DATA = [
+  { key: 'martyrs', value: '1,200+ / 3,500+' },
+  { key: 'buildings', value: '11,000+' },
+  { key: 'hospitals', value: '6' },
+  { key: 'schools', value: '18' },
+  { key: 'green', value: '3,500,000' },
+  { key: 'infra', value: '95%' }
+];
+
 export const TRANSLATIONS = {
   en: {
     title: "Beit Hanoun Municipality",
@@ -93,6 +171,9 @@ export const TRANSLATIONS = {
     contact: "Contact Us",
     admin: "Admin Portal",
     ads: "Announcements",
+    relief: "Relief Organizations",
+    war2023: "War 2023 Statistics",
+    visitWebsite: "Visit Website",
     welcome: "Beit Hanoun Municipality Emergency Services Portal",
     welcomeDesc: "We strive to serve you by assessing damages, updating displacement records, and receiving urgent appeals during these critical times.",
     btnRegister: "Citizen Registration",
@@ -101,6 +182,16 @@ export const TRANSLATIONS = {
     viewAllAds: "View All Announcements",
     noAds: "No announcements available at the moment.",
     readMore: "Read More",
+    stats: {
+      title: "War Impact Statistics (2023-2025)",
+      subtitle: "The devastating scale of destruction in Beit Hanoun city and its infrastructure.",
+      martyrs: "Martyrs & Injuries",
+      buildings: "Destroyed Units",
+      hospitals: "Medical Facilities",
+      schools: "Destroyed Schools",
+      green: "Bulldozed Lands (m²)",
+      infra: "Infrastructure Damage"
+    },
     formTitle: "Citizen Displacement & Status Form",
     formDesc: "Please follow the steps to register your current status accurately.",
     steps: {
@@ -119,6 +210,9 @@ export const TRANSLATIONS = {
       originalAddressDetails: "Address Details",
       currentEvacuationState: "Current Governorate",
       evacuationType: "Type of Shelter",
+      originalAddress: "Original Address",
+      currentLoc: "Current Location",
+      origAddress: "Original Address",
 
       wifeName: "Wife's Name",
       wifeIdNumber: "Wife's ID Number",
@@ -152,9 +246,12 @@ export const TRANSLATIONS = {
     adminPanel: {
       title: "Administration Dashboard",
       tabs: {
-        citizens: "Citizens Requests",
+        registry: "Displacement Registry",
+        messages: "Inquiries & Messages",
         announcements: "Manage Announcements"
       },
+      exportExcel: "Export to Excel",
+      printPdf: "Print / Save PDF",
       totalCitizens: "Total Registered",
       pending: "Pending Review",
       recent: "Recent Submissions",
@@ -164,6 +261,12 @@ export const TRANSLATIONS = {
         family: "Family Size",
         status: "Status",
         actions: "Actions",
+        phone: "Phone",
+        idNumber: "ID Number",
+        wifeName: "Wife Name",
+        notes: "Notes",
+        date: "Date",
+        subject: "Subject",
       },
       modal: {
         title: "Request Details",
@@ -174,7 +277,8 @@ export const TRANSLATIONS = {
         close: "Close",
         statusUpdated: "Status updated and feedback sent!",
         contactInfo: "Contact Information",
-        requestInfo: "Request Information"
+        requestInfo: "Request Information",
+        messageDetails: "Message Details"
       },
       announcements: {
         add: "Add Announcement",
@@ -203,10 +307,11 @@ export const TRANSLATIONS = {
       invalidEmail: "Please enter a valid email address",
       invalidPhone: "Please enter a valid phone number (9-15 digits)",
       invalidID: "Invalid ID Number",
+      idExists: "This ID number is already registered",
       nameTooShort: "Name must contain only letters and be at least 3 characters",
       feedbackRequired: "Feedback cannot be empty if you wish to send it"
     },
-    footer: "© 2024 Beit Hanoun Municipality. All Rights Reserved.",
+    footer: "Developed by IT Unit at Beit Hanoun Municipality - 2025",
     chatbot: {
       title: "Municipality Assistant",
       welcome: "Hello! How can I help you today? I can guide you to registration or contact info.",
@@ -228,6 +333,9 @@ export const TRANSLATIONS = {
     contact: "اتصل بنا",
     admin: "لوحة الإدارة",
     ads: "التعاميم والإعلانات",
+    relief: "مؤسسات إغاثية",
+    war2023: "إحصائيات حرب 2023",
+    visitWebsite: "زيارة الموقع",
     welcome: "بوابة الخدمات الطارئة لبلدية بيت حانون",
     welcomeDesc: "نسعى لخدمتكم والتخفيف عنكم من خلال حصر الأضرار وتحديث بيانات النزوح واستقبال مناشداتكم العاجلة.",
     btnRegister: "تسجيل بيانات المواطنين",
@@ -236,6 +344,16 @@ export const TRANSLATIONS = {
     viewAllAds: "عرض جميع التعاميم",
     noAds: "لا توجد إعلانات متاحة حالياً.",
     readMore: "اقرأ المزيد",
+    stats: {
+      title: "إحصائيات أضرار العدوان (2023-2025)",
+      subtitle: "حجم الدمار الهائل في مدينة بيت حانون والبنية التحتية.",
+      martyrs: "الشهداء والجرحى",
+      buildings: "وحدات سكنية مدمرة",
+      hospitals: "مرافق صحية وعيادات",
+      schools: "مدارس ومؤسسات",
+      green: "تجريف أراضي زراعية (م²)",
+      infra: "دمار البنية التحتية"
+    },
     formTitle: "نموذج بيانات المواطنين والنزوح",
     formDesc: "يرجى اتباع الخطوات لتسجيل حالتك الحالية بدقة.",
     steps: {
@@ -254,6 +372,9 @@ export const TRANSLATIONS = {
       originalAddressDetails: "تفاصيل العنوان",
       currentEvacuationState: "محافظة النزوح الحالية",
       evacuationType: "نوع مكان النزوح",
+      originalAddress: "العنوان الأصلي",
+      currentLoc: "مكان النزوح",
+      origAddress: "العنوان الأصلي",
 
       wifeName: "اسم الزوجة الرباعي",
       wifeIdNumber: "رقم هوية الزوجة",
@@ -287,9 +408,12 @@ export const TRANSLATIONS = {
     adminPanel: {
       title: "لوحة التحكم الإدارية",
       tabs: {
-        citizens: "طلبات المواطنين",
+        registry: "سجل النازحين",
+        messages: "طلبات المواطنين والمراسلات",
         announcements: "إدارة الإعلانات"
       },
+      exportExcel: "تصدير لملف Excel",
+      printPdf: "طباعة / حفظ PDF",
       totalCitizens: "المسجلين",
       pending: "قيد المراجعة",
       recent: "أحدث الطلبات",
@@ -299,6 +423,12 @@ export const TRANSLATIONS = {
         family: "الأفراد",
         status: "الحالة",
         actions: "إجراءات",
+        phone: "رقم التواصل",
+        idNumber: "رقم الهوية",
+        wifeName: "اسم الزوجة",
+        notes: "ملاحظات",
+        date: "التاريخ",
+        subject: "الموضوع",
       },
       modal: {
         title: "تفاصيل الطلب",
@@ -309,7 +439,8 @@ export const TRANSLATIONS = {
         close: "إغلاق",
         statusUpdated: "تم تحديث الحالة وإرسال الملاحظات!",
         contactInfo: "معلومات الاتصال",
-        requestInfo: "معلومات الطلب"
+        requestInfo: "معلومات الطلب",
+        messageDetails: "تفاصيل الرسالة"
       },
       announcements: {
         add: "إضافة إعلان جديد",
@@ -338,10 +469,11 @@ export const TRANSLATIONS = {
       invalidEmail: "يرجى إدخال بريد إلكتروني صحيح",
       invalidPhone: "يرجى إدخال رقم هاتف صحيح (9-15 رقم)",
       invalidID: "يرجى إدخال رقم هوية صحيح",
+      idExists: "رقم الهوية هذا مسجل مسبقاً",
       nameTooShort: "الاسم يجب أن يحتوي على أحرف فقط (3 أحرف على الأقل)",
       feedbackRequired: "الملاحظات لا يمكن أن تكون فارغة"
     },
-    footer: "© 2024 بلدية بيت حانون. جميع الحقوق محفوظة.",
+    footer: "تم تطويره بواسطة وحدة تكنولوجيا المعلومات في بلدية بيت حانون - 2025",
     chatbot: {
       title: "المساعد الآلي",
       welcome: "أهلاً بك! كيف يمكنني مساعدتك اليوم؟ يمكنني توجيهك للتسجيل أو التواصل.",

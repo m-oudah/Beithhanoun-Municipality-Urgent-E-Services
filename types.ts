@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 export type Language = 'en' | 'ar';
@@ -31,11 +32,14 @@ export interface CitizenRecord {
 }
 
 export interface ContactMessage {
+  id: string;
   name: string;
   email: string;
   whatsapp?: string;
   subject: string;
   message: string;
+  submittedAt: string;
+  status: 'read' | 'unread';
 }
 
 export interface NavItem {

@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { Menu, X, Globe, Home, Users, Mail, LayoutDashboard, Megaphone } from 'lucide-react';
+import { Menu, X, Globe, Home, Users, Mail, LayoutDashboard, Megaphone, HeartHandshake, AlertOctagon } from 'lucide-react';
 import { Language } from '../types';
 import { TRANSLATIONS } from '../constants';
 import { Chatbot } from './Chatbot';
@@ -23,8 +24,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, lang, setLang, current
 
   const navItems = [
     { id: 'home', label: t.home, icon: <Home size={18} /> },
-    { id: 'ads', label: t.ads, icon: <Megaphone size={18} /> },
     { id: 'register', label: t.register, icon: <Users size={18} /> },
+    { id: 'relief', label: t.relief, icon: <HeartHandshake size={18} /> },
+    { id: 'war2023', label: t.war2023, icon: <AlertOctagon size={18} /> },
     { id: 'contact', label: t.contact, icon: <Mail size={18} /> },
   ];
 
@@ -48,7 +50,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, lang, setLang, current
                 <button
                   key={item.id}
                   onClick={() => setPage(item.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors font-medium ${
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors font-medium text-sm lg:text-base ${
                     currentPage === item.id 
                       ? 'bg-primary-500 text-white shadow-md' 
                       : 'text-slate-600 dark:text-slate-300 hover:bg-primary-50 dark:hover:bg-slate-800 hover:text-primary-600'

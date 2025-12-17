@@ -3,6 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- Security: Upgrade Insecure Requests and Force HTTPS -->
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+    <script>
+      if (window.location.protocol === 'http:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        window.location.replace(window.location.href.replace(/^http:/, 'https:'));
+      }
+    </script>
+
     <title>Beit Hanoun Municipality</title>
     <link rel="icon" type="image/png" href="https://upload.wikimedia.org/wikipedia/commons/e/ea/Beit_Hanoun_Municipality_Logo.png" />
     <script src="https://cdn.tailwindcss.com"></script>
