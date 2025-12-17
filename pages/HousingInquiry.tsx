@@ -100,7 +100,7 @@ export const HousingInquiry: React.FC<HousingInquiryProps> = ({ lang }) => {
                     required
                     value={searchData.ownerName}
                     onChange={e => setSearchData({...searchData, ownerName: e.target.value})}
-                    placeholder={t.searchPlaceholder}
+                    placeholder={isRTL ? "أدخل الاسم أو جزء منه..." : "Owner name or part of it..."}
                     className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-secondary-500 transition text-sm"
                   />
                 </div>
@@ -124,8 +124,10 @@ export const HousingInquiry: React.FC<HousingInquiryProps> = ({ lang }) => {
                     required
                     value={searchData.address}
                     onChange={e => setSearchData({...searchData, address: e.target.value})}
+                    placeholder={isRTL ? "مثلاً: القرمان أو السكة..." : "e.g., Al-Qarman..."}
                     className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-secondary-500 transition text-sm"
                   />
+                  <p className="text-[10px] text-gray-400 mt-1">{isRTL ? "* يكفي إدخال جزء من العنوان المسجل" : "* Partial address is enough"}</p>
                 </div>
 
                 <button 

@@ -4,6 +4,18 @@ import { Language, Announcement, HousingUnit } from './types';
 // Mock data for housing units
 export const MOCK_HOUSING_UNITS: HousingUnit[] = [
   {
+    id: 'u4',
+    ownerName: 'محمد',
+    ownerId: '123456789',
+    dob: '1990-01-01',
+    idIssueDate: '2022-01-01',
+    address: 'القرمان',
+    floors: 2,
+    area: 140,
+    condition: 'total_destruction',
+    lastUpdated: '2025-02-15'
+  },
+  {
     id: 'u1',
     ownerName: 'أحمد محمد علي المصري',
     ownerId: '901234567',

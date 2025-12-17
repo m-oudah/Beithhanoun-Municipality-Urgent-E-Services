@@ -7,11 +7,21 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 export const ApiService = {
   async inquireHousingUnit(params: { ownerName: string, idNumber: string, address: string }): Promise<HousingUnit | null> {
     await delay(1200);
-    const unit = MOCK_HOUSING_UNITS.find(u => 
-      u.ownerId === params.idNumber && 
-      u.address.includes(params.address.trim()) &&
-      u.ownerName.includes(params.ownerName.trim())
-    );
+    
+    const searchId = params.idNumber.trim();
+    const searchName = params.ownerName.trim();
+    const searchAddress = params.address.trim();
+
+    // البحث بمطابقة دقيقة للهوية، ومطابقة جزئية مرنة للاسم والعنوان
+    const unit = MOCK_HOUSING_UNITS.find(u => {
+      const matchId = u.ownerId === searchId;
+      // البحث عن جزء من الاسم وجزء من العنوان (Partial Match)
+      const matchName = u.ownerName.includes(searchName) || searchName.includes(u.ownerName);
+      const matchAddress = u.address.includes(searchAddress) || searchAddress.includes(u.address);
+      
+      return matchId && matchName && matchAddress;
+    });
+    
     return unit || null;
   },
 
