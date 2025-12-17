@@ -196,9 +196,10 @@ export const TRANSLATIONS = {
     stats: { title: "War Impact Statistics", subtitle: "Data of destruction", martyrs: "Martyrs", buildings: "Buildings", hospitals: "Hospitals", schools: "Schools", green: "Green Lands", infra: "Infrastructure" },
     adminPanel: { 
       title: "Admin Panel", 
-      tabs: { registry: "Registry", messages: "Messages", announcements: "Announcements" }, 
+      tabs: { registry: "Registry", messages: "Messages", announcements: "Announcements", housing: "Housing Units" }, 
       totalCitizens: "Total", 
       exportExcel: "Export Excel",
+      importExcel: "Import Excel",
       printPdf: "Print PDF",
       table: { name: "Name", idNumber: "ID", phone: "Phone", family: "Family", responded: "Responded", actions: "Actions", date: "Date", subject: "Subject" }, 
       announcements: { add: "Add", edit: "Edit", delete: "Delete", hide: "Hide", show: "Show", date: "Date", category: "Category", titleAr: "Title (Ar)", contentAr: "Content (Ar)", titleEn: "Title (En)", contentEn: "Content (En)", save: "Save", categories: { general: "General", emergency: "Emergency", service: "Service" } }, 
@@ -275,9 +276,10 @@ export const TRANSLATIONS = {
     stats: { title: "إحصائيات أضرار العدوان", subtitle: "حجم الدمار في المدينة", martyrs: "الشهداء والجرحى", buildings: "وحدات مدمرة", hospitals: "مرافق صحية", schools: "مدارس", green: "تجريف أراضي", infra: "دمار البنية التحتية" },
     adminPanel: { 
       title: "لوحة التحكم الإدارية", 
-      tabs: { registry: "سجل النازحين", messages: "طلبات المواطنين", announcements: "إدارة الإعلانات" }, 
+      tabs: { registry: "سجل النازحين", messages: "طلبات المواطنين", announcements: "إدارة الإعلانات", housing: "إدارة الوحدات السكنية" }, 
       totalCitizens: "المسجلين", 
       exportExcel: "تصدير Excel",
+      importExcel: "استيراد Excel",
       printPdf: "طباعة PDF",
       table: { name: "الاسم", idNumber: "رقم الهوية", phone: "الهاتف", family: "العائلة", responded: "تم الرد", actions: "إجراءات", date: "التاريخ", subject: "الموضوع" }, 
       announcements: { add: "إضافة", edit: "تعديل", delete: "حذف", hide: "إخفاء", show: "إظهار", date: "التاريخ", category: "التصنيف", titleAr: "العنوان (عربي)", contentAr: "المحتوى (عربي)", titleEn: "العنوان (إنجليزي)", contentEn: "المحتوى (إنجليزي)", save: "حفظ", categories: { general: "عام", emergency: "طوارئ", service: "خدماتي" } }, 

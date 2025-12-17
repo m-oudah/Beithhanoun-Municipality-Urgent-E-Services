@@ -12,17 +12,57 @@ export const ApiService = {
     const searchName = params.ownerName.trim();
     const searchAddress = params.address.trim();
 
-    // البحث بمطابقة دقيقة للهوية، ومطابقة جزئية مرنة للاسم والعنوان
-    const unit = MOCK_HOUSING_UNITS.find(u => {
+    const units = await ApiService.getAllHousingUnits();
+    const unit = units.find(u => {
       const matchId = u.ownerId === searchId;
-      // البحث عن جزء من الاسم وجزء من العنوان (Partial Match)
       const matchName = u.ownerName.includes(searchName) || searchName.includes(u.ownerName);
       const matchAddress = u.address.includes(searchAddress) || searchAddress.includes(u.address);
-      
       return matchId && matchName && matchAddress;
     });
     
     return unit || null;
+  },
+
+  async getAllHousingUnits(): Promise<HousingUnit[]> {
+    await delay(500);
+    const existing = localStorage.getItem('housing_units');
+    if (existing) return JSON.parse(existing);
+    localStorage.setItem('housing_units', JSON.stringify(MOCK_HOUSING_UNITS));
+    return MOCK_HOUSING_UNITS;
+  },
+
+  async createHousingUnit(data: Omit<HousingUnit, 'id'>): Promise<HousingUnit> {
+    await delay(500);
+    const newUnit: HousingUnit = { ...data, id: Math.random().toString(36).substr(2, 9) };
+    const units = await ApiService.getAllHousingUnits();
+    const updated = [newUnit, ...units];
+    localStorage.setItem('housing_units', JSON.stringify(updated));
+    return newUnit;
+  },
+
+  async updateHousingUnit(id: string, data: Partial<HousingUnit>): Promise<HousingUnit | null> {
+    await delay(500);
+    const units = await ApiService.getAllHousingUnits();
+    const index = units.findIndex(u => u.id === id);
+    if (index !== -1) {
+      units[index] = { ...units[index], ...data };
+      localStorage.setItem('housing_units', JSON.stringify(units));
+      return units[index];
+    }
+    return null;
+  },
+
+  async deleteHousingUnit(id: string): Promise<boolean> {
+    await delay(500);
+    const units = await ApiService.getAllHousingUnits();
+    const filtered = units.filter(u => u.id !== id);
+    localStorage.setItem('housing_units', JSON.stringify(filtered));
+    return true;
+  },
+
+  async importHousingUnits(units: HousingUnit[]): Promise<void> {
+    await delay(1000);
+    localStorage.setItem('housing_units', JSON.stringify(units));
   },
 
   async submitCitizenData(data: Omit<CitizenRecord, 'id' | 'status' | 'submittedAt'>): Promise<CitizenRecord> {

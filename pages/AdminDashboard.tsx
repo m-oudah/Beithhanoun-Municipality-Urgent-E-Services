@@ -1,7 +1,7 @@
 
-import React, { useEffect, useState } from 'react';
-import { Users, AlertCircle, CheckCircle, Lock, User, Key, LogOut, X, Phone, MessageCircle, MapPin, Send, MessageSquare, Megaphone, Edit, Trash2, Plus, Calendar, FileSpreadsheet, Printer, Mail, Eye, EyeOff, CheckSquare, Square } from 'lucide-react';
-import { Language, CitizenRecord, Announcement, ContactMessage } from '../types';
+import React, { useEffect, useState, useRef } from 'react';
+import { Users, AlertCircle, CheckCircle, Lock, User, Key, LogOut, X, Phone, MessageCircle, MapPin, Send, MessageSquare, Megaphone, Edit, Trash2, Plus, Calendar, FileSpreadsheet, Printer, Mail, Eye, EyeOff, CheckSquare, Square, Building, Download, Upload } from 'lucide-react';
+import { Language, CitizenRecord, Announcement, ContactMessage, HousingUnit } from '../types';
 import { TRANSLATIONS } from '../constants';
 import { ApiService } from '../services/api';
 import { sanitizeInput } from '../utils/validation';
@@ -10,7 +10,6 @@ interface AdminProps {
   lang: Language;
 }
 
-// Added React import to resolve "Cannot find namespace 'React'" error on line 13
 export const AdminDashboard: React.FC<AdminProps> = ({ lang }) => {
   const t = TRANSLATIONS[lang];
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -18,7 +17,7 @@ export const AdminDashboard: React.FC<AdminProps> = ({ lang }) => {
   const [error, setError] = useState('');
   
   // Dashboard Tabs
-  const [activeTab, setActiveTab] = useState<'registry' | 'messages' | 'announcements'>('registry');
+  const [activeTab, setActiveTab] = useState<'registry' | 'messages' | 'announcements' | 'housing'>('registry');
 
   // Registry (Citizens) State
   const [citizens, setCitizens] = useState<CitizenRecord[]>([]);
@@ -40,19 +39,29 @@ export const AdminDashboard: React.FC<AdminProps> = ({ lang }) => {
     titleEn: '', titleAr: '', contentEn: '', contentAr: '', category: 'general', date: ''
   });
 
+  // Housing Units State
+  const [housingUnits, setHousingUnits] = useState<HousingUnit[]>([]);
+  const [isHousingModalOpen, setIsHousingModalOpen] = useState(false);
+  const [editingUnit, setEditingUnit] = useState<HousingUnit | null>(null);
+  const [housingForm, setHousingForm] = useState<Omit<HousingUnit, 'id'>>({
+    ownerName: '', ownerId: '', dob: '', idIssueDate: '', address: '', floors: 0, area: 0, condition: 'habitable', lastUpdated: ''
+  });
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     if (isAuthenticated) {
       if (activeTab === 'registry') {
         ApiService.getCitizens().then(setCitizens);
       } else if (activeTab === 'messages') {
         ApiService.getContactMessages().then(setMessages);
+      } else if (activeTab === 'housing') {
+        ApiService.getAllHousingUnits().then(setHousingUnits);
       } else {
         ApiService.getAnnouncements().then(setAnnouncements);
       }
     }
   }, [isAuthenticated, activeTab]);
 
-  // Added React import to resolve "Cannot find namespace 'React'" error on line 54
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (credentials.username === 'admin' && credentials.password === '123456') {
@@ -66,28 +75,14 @@ export const AdminDashboard: React.FC<AdminProps> = ({ lang }) => {
   const handleLogout = () => {
     setIsAuthenticated(false);
     setCredentials({ username: '', password: '' });
-    setCitizens([]);
   };
 
   // --- Export & Print Functions ---
   const downloadCSV = () => {
     if (citizens.length === 0) return;
-    
-    // Included all fields in export including hidden ones (Wife Name, Notes, Original Address)
-    const headers = [
-      'Full Name', 'ID Number', 'Phone', 'Original Area', 'Original Street', 'Address Details',
-      'Current State', 'Evacuation Type', 'Wife Name', 'Family Members', 'Males', 'Females', 'Notes', 'Status'
-    ];
-
-    const rows = citizens.map(c => [
-      `"${c.fullName}"`, `"${c.idNumber}"`, `"${c.phone}"`, `"${c.originalArea}"`, `"${c.originalStreet}"`, `"${c.originalAddressDetails || ''}"`,
-      `"${c.currentEvacuationState}"`, `"${c.evacuationType}"`, `"${c.wifeName}"`, c.familyMembers, c.males, c.females, `"${c.notes || ''}"`, c.status
-    ]);
-
-    const csvContent = "data:text/csv;charset=utf-8," 
-      + headers.join(",") + "\n" 
-      + rows.map(e => e.join(",")).join("\n");
-
+    const headers = ['Full Name', 'ID Number', 'Phone', 'Original Area', 'Original Street', 'Address Details', 'Current State', 'Evacuation Type', 'Wife Name', 'Family Members', 'Males', 'Females', 'Notes', 'Status'];
+    const rows = citizens.map(c => [`"${c.fullName}"`, `"${c.idNumber}"`, `"${c.phone}"`, `"${c.originalArea}"`, `"${c.originalStreet}"`, `"${c.originalAddressDetails || ''}"`, `"${c.currentEvacuationState}"`, `"${c.evacuationType}"`, `"${c.wifeName}"`, c.familyMembers, c.males, c.females, `"${c.notes || ''}"`, c.status]);
+    const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + headers.join(",") + "\n" + rows.map(e => e.join(",")).join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -97,8 +92,112 @@ export const AdminDashboard: React.FC<AdminProps> = ({ lang }) => {
     document.body.removeChild(link);
   };
 
+  const downloadHousingCSV = () => {
+    if (housingUnits.length === 0) return;
+    const headers = ['Owner Name', 'ID Number', 'Address', 'Floors', 'Area', 'Condition', 'Last Updated'];
+    const rows = housingUnits.map(u => [`"${u.ownerName}"`, `"${u.ownerId}"`, `"${u.address}"`, u.floors, u.area, u.condition, u.lastUpdated]);
+    const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + headers.join(",") + "\n" + rows.map(e => e.join(",")).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `housing_units_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleHousingImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const text = event.target?.result as string;
+      const lines = text.split('\n');
+      const newUnits: HousingUnit[] = [];
+      
+      // Basic CSV parser (skipping header)
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        
+        const cols = line.split(',').map(c => c.replace(/"/g, ''));
+        if (cols.length >= 6) {
+          newUnits.push({
+            id: Math.random().toString(36).substr(2, 9),
+            ownerName: cols[0],
+            ownerId: cols[1],
+            address: cols[2],
+            floors: parseInt(cols[3]) || 1,
+            area: parseInt(cols[4]) || 100,
+            condition: cols[5] as any,
+            lastUpdated: cols[6] || new Date().toISOString().split('T')[0],
+            dob: '',
+            idIssueDate: ''
+          });
+        }
+      }
+
+      if (newUnits.length > 0) {
+        await ApiService.importHousingUnits(newUnits);
+        setHousingUnits(newUnits);
+        alert(lang === 'ar' ? `تم استيراد ${newUnits.length} وحدة بنجاح` : `Imported ${newUnits.length} units successfully`);
+      }
+    };
+    reader.readAsText(file);
+  };
+
   const handlePrint = () => {
     window.print();
+  };
+
+  // --- Housing Logic ---
+  const openHousingModal = (unit?: HousingUnit) => {
+    if (unit) {
+      setEditingUnit(unit);
+      setHousingForm({
+        ownerName: unit.ownerName,
+        ownerId: unit.ownerId,
+        address: unit.address,
+        floors: unit.floors,
+        area: unit.area,
+        condition: unit.condition,
+        lastUpdated: unit.lastUpdated,
+        dob: unit.dob || '',
+        idIssueDate: unit.idIssueDate || ''
+      });
+    } else {
+      setEditingUnit(null);
+      setHousingForm({
+        ownerName: '', ownerId: '', dob: '', idIssueDate: '', address: '', floors: 1, area: 100, condition: 'habitable', lastUpdated: new Date().toISOString().split('T')[0]
+      });
+    }
+    setIsHousingModalOpen(true);
+  };
+
+  const saveHousingUnit = async () => {
+    const data = {
+      ...housingForm,
+      ownerName: sanitizeInput(housingForm.ownerName),
+      address: sanitizeInput(housingForm.address),
+    };
+
+    if (editingUnit) {
+      await ApiService.updateHousingUnit(editingUnit.id, data);
+    } else {
+      await ApiService.createHousingUnit(data);
+    }
+    
+    const updatedList = await ApiService.getAllHousingUnits();
+    setHousingUnits(updatedList);
+    setIsHousingModalOpen(false);
+  };
+
+  const deleteHousingUnit = async (id: string) => {
+    if (window.confirm(lang === 'ar' ? 'هل أنت متأكد من حذف هذه الوحدة؟' : 'Are you sure you want to delete this unit?')) {
+      await ApiService.deleteHousingUnit(id);
+      setHousingUnits(housingUnits.filter(u => u.id !== id));
+    }
   };
 
   // --- Citizen Logic ---
@@ -164,7 +263,6 @@ export const AdminDashboard: React.FC<AdminProps> = ({ lang }) => {
       await ApiService.createAnnouncement(data);
     }
     
-    // Refresh list
     const updatedList = await ApiService.getAnnouncements();
     setAnnouncements(updatedList);
     setIsAdModalOpen(false);
@@ -177,7 +275,6 @@ export const AdminDashboard: React.FC<AdminProps> = ({ lang }) => {
     }
   };
 
-  // Added React import to resolve "Cannot find namespace 'React'" error on line 178
   const toggleResponded = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     const updated = await ApiService.toggleMessageResponded(id);
@@ -249,21 +346,10 @@ export const AdminDashboard: React.FC<AdminProps> = ({ lang }) => {
     <div className="container mx-auto px-4 py-8 relative">
       <style>{`
         @media print {
-          body * {
-            visibility: hidden;
-          }
-          .printable-table, .printable-table * {
-            visibility: visible;
-          }
-          .printable-table {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-          }
-          .no-print {
-            display: none !important;
-          }
+          body * { visibility: hidden; }
+          .printable-table, .printable-table * { visibility: visible; }
+          .printable-table { position: absolute; left: 0; top: 0; width: 100%; }
+          .no-print { display: none !important; }
         }
       `}</style>
 
@@ -285,30 +371,24 @@ export const AdminDashboard: React.FC<AdminProps> = ({ lang }) => {
 
       {/* TABS */}
       <div className="flex flex-wrap gap-4 mb-8 border-b border-gray-200 dark:border-slate-700 no-print">
-        <button 
-          onClick={() => setActiveTab('registry')}
-          className={`px-4 md:px-6 py-3 font-bold border-b-2 transition flex items-center gap-2 ${activeTab === 'registry' ? 'border-primary-600 text-primary-600 dark:text-primary-400' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
-        >
-          <FileSpreadsheet size={18} />
-          {t.adminPanel.tabs.registry}
-        </button>
-        <button 
-          onClick={() => setActiveTab('messages')}
-          className={`px-4 md:px-6 py-3 font-bold border-b-2 transition flex items-center gap-2 ${activeTab === 'messages' ? 'border-primary-600 text-primary-600 dark:text-primary-400' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
-        >
-          <Mail size={18} />
-          {t.adminPanel.tabs.messages}
-        </button>
-        <button 
-          onClick={() => setActiveTab('announcements')}
-          className={`px-4 md:px-6 py-3 font-bold border-b-2 transition flex items-center gap-2 ${activeTab === 'announcements' ? 'border-primary-600 text-primary-600 dark:text-primary-400' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
-        >
-          <Megaphone size={18} />
-          {t.adminPanel.tabs.announcements}
-        </button>
+        {[
+            { id: 'registry', icon: <FileSpreadsheet size={18} />, label: t.adminPanel.tabs.registry },
+            { id: 'messages', icon: <Mail size={18} />, label: t.adminPanel.tabs.messages },
+            { id: 'housing', icon: <Building size={18} />, label: t.adminPanel.tabs.housing },
+            { id: 'announcements', icon: <Megaphone size={18} />, label: t.adminPanel.tabs.announcements },
+        ].map(tab => (
+            <button 
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`px-4 md:px-6 py-3 font-bold border-b-2 transition flex items-center gap-2 ${activeTab === tab.id ? 'border-primary-600 text-primary-600 dark:text-primary-400' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+            >
+                {tab.icon}
+                {tab.label}
+            </button>
+        ))}
       </div>
 
-      {/* TAB: DISPLACEMENT REGISTRY (FULL DATA) */}
+      {/* TAB: DISPLACEMENT REGISTRY */}
       {activeTab === 'registry' && (
         <div className="printable-table">
             <div className="flex justify-between items-center mb-4 no-print">
@@ -332,11 +412,8 @@ export const AdminDashboard: React.FC<AdminProps> = ({ lang }) => {
                         <th className={`px-4 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.adminPanel.table.name}</th>
                         <th className={`px-4 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.adminPanel.table.idNumber}</th>
                         <th className={`px-4 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.adminPanel.table.phone}</th>
-                        {/* Hidden Original Address from table view but kept in export */}
                         <th className={`px-4 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.fields.currentLoc}</th>
                         <th className={`px-4 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.adminPanel.table.family}</th>
-                        {/* Hidden Wife Name from table view but kept in export */}
-                        {/* Hidden Notes from table view but kept in export */}
                         <th className="px-4 py-3 no-print">{t.adminPanel.table.actions}</th>
                     </tr>
                     </thead>
@@ -350,10 +427,7 @@ export const AdminDashboard: React.FC<AdminProps> = ({ lang }) => {
                             <td className={`px-4 py-3 text-gray-600 dark:text-gray-300 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{citizen.currentEvacuationState} ({citizen.evacuationType})</td>
                             <td className={`px-4 py-3 text-gray-600 dark:text-gray-300 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{citizen.familyMembers} (M:{citizen.males}/F:{citizen.females})</td>
                             <td className="px-4 py-3 no-print">
-                                <button 
-                                    onClick={() => openCitizenModal(citizen)}
-                                    className="text-blue-600 hover:text-blue-800 dark:text-blue-400 flex items-center gap-1 text-xs font-bold border border-blue-200 dark:border-blue-900 px-2 py-1 rounded"
-                                >
+                                <button onClick={() => openCitizenModal(citizen)} className="text-blue-600 hover:text-blue-800 dark:text-blue-400 flex items-center gap-1 text-xs font-bold border border-blue-200 dark:border-blue-900 px-2 py-1 rounded">
                                     <Edit size={14} /> Update
                                 </button>
                             </td>
@@ -366,126 +440,124 @@ export const AdminDashboard: React.FC<AdminProps> = ({ lang }) => {
         </div>
       )}
 
-      {/* TAB: MESSAGES / INQUIRIES (MODIFIED) */}
-      {activeTab === 'messages' && (
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow overflow-hidden transition-colors">
-            <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-700">
-                <h3 className="font-bold text-gray-800 dark:text-white">{t.adminPanel.tabs.messages}</h3>
+      {/* TAB: HOUSING UNITS (NEW) */}
+      {activeTab === 'housing' && (
+        <div className="printable-table">
+            <div className="flex flex-wrap justify-between items-center mb-4 gap-3 no-print">
+                <h3 className="text-lg font-bold text-gray-800 dark:text-white">{t.adminPanel.tabs.housing}: {housingUnits.length}</h3>
+                <div className="flex flex-wrap gap-2">
+                    <input type="file" ref={fileInputRef} onChange={handleHousingImport} className="hidden" accept=".csv" />
+                    <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 text-sm font-semibold transition">
+                        <Upload size={16} /> {t.adminPanel.importExcel}
+                    </button>
+                    <button onClick={downloadHousingCSV} className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-semibold transition">
+                        <Download size={16} /> {t.adminPanel.exportExcel}
+                    </button>
+                    <button onClick={() => openHousingModal()} className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm font-semibold transition">
+                        <Plus size={16} /> {t.adminPanel.announcements.add}
+                    </button>
+                </div>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
-                <thead className="bg-gray-50 dark:bg-slate-900/50 text-gray-600 dark:text-gray-400 font-medium">
-                  <tr>
-                    <th className={`px-6 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.adminPanel.table.responded}</th>
-                    <th className={`px-6 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.adminPanel.table.name}</th>
-                    <th className={`px-6 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.adminPanel.table.subject}</th>
-                    <th className={`px-6 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.adminPanel.table.phone}</th>
-                    <th className={`px-6 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.adminPanel.table.date}</th>
-                    <th className={`px-6 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.adminPanel.table.actions}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
-                  {messages.map((msg) => (
-                    <tr 
-                      key={msg.id} 
-                      className={`hover:bg-gray-50 dark:hover:bg-slate-700/50 transition cursor-pointer ${msg.responded ? 'bg-green-100 dark:bg-green-900/30' : ''}`}
-                      onClick={() => setSelectedMessage(msg)}
-                    >
-                      <td className="px-6 py-4">
-                        <button 
-                          onClick={(e) => toggleResponded(e, msg.id)}
-                          className={`p-1 rounded-md transition ${msg.responded ? 'text-green-600' : 'text-gray-400'}`}
-                        >
-                          {msg.responded ? <CheckSquare size={20} /> : <Square size={20} />}
-                        </button>
-                      </td>
-                      <td className={`px-6 py-4 font-medium text-gray-900 dark:text-white ${lang === 'ar' ? 'text-right' : 'text-left'}`}>
-                        {msg.name}
-                        {msg.status === 'unread' && <span className="ml-2 w-2 h-2 bg-red-500 rounded-full inline-block"></span>}
-                      </td>
-                      <td className={`px-6 py-4 text-gray-600 dark:text-gray-300 font-semibold ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{msg.subject}</td>
-                      <td className={`px-6 py-4 text-gray-600 dark:text-gray-300 font-mono ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{msg.whatsapp}</td>
-                      <td className={`px-6 py-4 text-gray-500 text-xs ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{msg.submittedAt}</td>
-                      <td className={`px-6 py-4 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>
-                        <button className="text-primary-600 hover:text-primary-800">
-                            <Eye size={18} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                  {messages.length === 0 && (
-                    <tr>
-                      <td colSpan={6} className="px-6 py-8 text-center text-gray-400 dark:text-gray-500">
-                        No messages found.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow overflow-hidden border border-gray-200 dark:border-slate-700">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left whitespace-nowrap">
+                        <thead className="bg-gray-100 dark:bg-slate-900 text-gray-700 dark:text-gray-300 font-bold uppercase">
+                            <tr>
+                                <th className="px-4 py-3 text-center">#</th>
+                                <th className={`px-4 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.housing.owner}</th>
+                                <th className={`px-4 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.housing.idNumber}</th>
+                                <th className={`px-4 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.housing.unitAddress}</th>
+                                <th className={`px-4 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.housing.condition}</th>
+                                <th className="px-4 py-3 text-center no-print">{t.adminPanel.table.actions}</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
+                            {housingUnits.map((unit, idx) => (
+                                <tr key={unit.id} className="hover:bg-gray-50 dark:hover:bg-slate-700/50 transition">
+                                    <td className="px-4 py-3 text-center text-gray-500">{idx + 1}</td>
+                                    <td className={`px-4 py-3 font-medium text-gray-900 dark:text-white ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{unit.ownerName}</td>
+                                    <td className={`px-4 py-3 font-mono ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{unit.ownerId}</td>
+                                    <td className={`px-4 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{unit.address}</td>
+                                    <td className={`px-4 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>
+                                        <span className={`px-2 py-1 rounded text-xs font-bold ${
+                                            unit.condition === 'total_destruction' ? 'bg-red-100 text-red-700' : 
+                                            unit.condition === 'uninhabitable' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'
+                                        }`}>
+                                            {t.housing.conditions[unit.condition]}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-3 no-print">
+                                        <div className="flex justify-center gap-2">
+                                            <button onClick={() => openHousingModal(unit)} className="p-1 text-blue-600 hover:bg-blue-50 rounded transition">
+                                                <Edit size={16} />
+                                            </button>
+                                            <button onClick={() => deleteHousingUnit(unit.id)} className="p-1 text-red-600 hover:bg-red-50 rounded transition">
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
       )}
 
-      {/* TAB: ANNOUNCEMENTS */}
-      {activeTab === 'announcements' && (
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow overflow-hidden transition-colors">
-            <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-700 flex justify-between items-center">
-              <h3 className="font-bold text-gray-800 dark:text-white">{t.adminPanel.tabs.announcements}</h3>
-              <button 
-                onClick={() => openAdModal()}
-                className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2"
-              >
-                <Plus size={16} />
-                {t.adminPanel.announcements.add}
-              </button>
+      {/* Housing Edit Modal */}
+      {isHousingModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm no-print">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[95vh] flex flex-col">
+            <div className="bg-primary-600 p-6 flex justify-between items-center text-white">
+              <h3 className="text-xl font-bold">{editingUnit ? t.adminPanel.announcements.edit : t.adminPanel.announcements.add}</h3>
+              <button onClick={() => setIsHousingModalOpen(false)} className="hover:bg-white/20 rounded-full transition p-1"><X size={24} /></button>
             </div>
-            
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
-                <thead className="bg-gray-50 dark:bg-slate-900/50 text-gray-600 dark:text-gray-400 font-medium">
-                  <tr>
-                    <th className={`px-6 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.adminPanel.announcements.titleAr}</th>
-                    <th className={`px-6 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.adminPanel.announcements.date}</th>
-                    <th className={`px-6 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.adminPanel.announcements.category}</th>
-                    <th className={`px-6 py-3 text-center`}>{t.adminPanel.table.actions}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
-                  {announcements.map((ad) => (
-                    <tr key={ad.id} className={`hover:bg-gray-50 dark:hover:bg-slate-700/50 transition ${ad.hidden ? 'opacity-50 grayscale' : ''}`}>
-                      <td className={`px-6 py-4 font-medium text-gray-900 dark:text-white ${lang === 'ar' ? 'text-right' : 'text-left'}`}>
-                        {ad.title.ar}
-                      </td>
-                      <td className={`px-6 py-4 text-gray-600 dark:text-gray-300 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>
-                        {ad.date}
-                      </td>
-                      <td className={`px-6 py-4 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>
-                        <span className="px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded-full text-xs">
-                          {t.adminPanel.announcements.categories[ad.category as keyof typeof t.adminPanel.announcements.categories]}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex justify-center gap-3">
-                          <button onClick={() => openAdModal(ad)} className="text-blue-500 hover:text-blue-700">
-                            <Edit size={18} />
-                          </button>
-                          <button 
-                            onClick={() => toggleAdVisibility(ad.id)} 
-                            className={`${ad.hidden ? 'text-green-500 hover:text-green-700' : 'text-amber-500 hover:text-amber-700'}`}
-                            title={ad.hidden ? t.adminPanel.announcements.show : t.adminPanel.announcements.hide}
-                          >
-                            {ad.hidden ? <Eye size={18} /> : <EyeOff size={18} />}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="p-6 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="col-span-1 md:col-span-2 space-y-2">
+                <label className="text-xs font-bold uppercase">{t.housing.owner}</label>
+                <input type="text" value={housingForm.ownerName} onChange={e => setHousingForm({...housingForm, ownerName: e.target.value})} className="w-full p-2.5 border rounded-lg bg-slate-50 dark:bg-slate-900" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase">{t.housing.idNumber}</label>
+                <input type="text" value={housingForm.ownerId} onChange={e => setHousingForm({...housingForm, ownerId: e.target.value})} className="w-full p-2.5 border rounded-lg bg-slate-50 dark:bg-slate-900" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase">{t.housing.unitAddress}</label>
+                <input type="text" value={housingForm.address} onChange={e => setHousingForm({...housingForm, address: e.target.value})} className="w-full p-2.5 border rounded-lg bg-slate-50 dark:bg-slate-900" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase">{t.housing.floors}</label>
+                <input type="number" value={housingForm.floors} onChange={e => setHousingForm({...housingForm, floors: parseInt(e.target.value) || 1})} className="w-full p-2.5 border rounded-lg bg-slate-50 dark:bg-slate-900" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase">{t.housing.area}</label>
+                <input type="number" value={housingForm.area} onChange={e => setHousingForm({...housingForm, area: parseInt(e.target.value) || 100})} className="w-full p-2.5 border rounded-lg bg-slate-50 dark:bg-slate-900" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase">{t.housing.condition}</label>
+                <select value={housingForm.condition} onChange={e => setHousingForm({...housingForm, condition: e.target.value as any})} className="w-full p-2.5 border rounded-lg bg-slate-50 dark:bg-slate-900">
+                    <option value="habitable">{t.housing.conditions.habitable}</option>
+                    <option value="uninhabitable">{t.housing.conditions.uninhabitable}</option>
+                    <option value="total_destruction">{t.housing.conditions.total_destruction}</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase">{t.housing.lastUpdate}</label>
+                <input type="date" value={housingForm.lastUpdated} onChange={e => setHousingForm({...housingForm, lastUpdated: e.target.value})} className="w-full p-2.5 border rounded-lg bg-slate-50 dark:bg-slate-900" />
+              </div>
+              <div className="col-span-1 md:col-span-2 pt-4">
+                <button onClick={saveHousingUnit} className="w-full py-3 bg-primary-600 text-white font-bold rounded-xl shadow-lg hover:bg-primary-700 transition">
+                    {t.adminPanel.announcements.save}
+                </button>
+              </div>
             </div>
+          </div>
         </div>
       )}
 
+      {/* ... (Keep Registry Update Modal, Message Modal, and Announcement Modal as they are) ... */}
       {/* Citizen Update Modal */}
       {selectedCitizen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm no-print">
