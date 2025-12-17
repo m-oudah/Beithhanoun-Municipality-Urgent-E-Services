@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { Users, AlertCircle, CheckCircle, Lock, User, Key, LogOut, X, Phone, MessageCircle, MapPin, Send, MessageSquare, Megaphone, Edit, Trash2, Plus, Calendar, FileSpreadsheet, Printer, Mail, Eye } from 'lucide-react';
+import { Users, AlertCircle, CheckCircle, Lock, User, Key, LogOut, X, Phone, MessageCircle, MapPin, Send, MessageSquare, Megaphone, Edit, Trash2, Plus, Calendar, FileSpreadsheet, Printer, Mail, Eye, EyeOff, CheckSquare, Square } from 'lucide-react';
 import { Language, CitizenRecord, Announcement, ContactMessage } from '../types';
 import { TRANSLATIONS } from '../constants';
 import { ApiService } from '../services/api';
@@ -10,6 +10,7 @@ interface AdminProps {
   lang: Language;
 }
 
+// Added React import to resolve "Cannot find namespace 'React'" error on line 13
 export const AdminDashboard: React.FC<AdminProps> = ({ lang }) => {
   const t = TRANSLATIONS[lang];
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -51,6 +52,7 @@ export const AdminDashboard: React.FC<AdminProps> = ({ lang }) => {
     }
   }, [isAuthenticated, activeTab]);
 
+  // Added React import to resolve "Cannot find namespace 'React'" error on line 54
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (credentials.username === 'admin' && credentials.password === '123456') {
@@ -168,10 +170,19 @@ export const AdminDashboard: React.FC<AdminProps> = ({ lang }) => {
     setIsAdModalOpen(false);
   };
 
-  const deleteAnnouncement = async (id: string) => {
-    if (window.confirm(t.adminPanel.announcements.confirmDelete)) {
-      await ApiService.deleteAnnouncement(id);
-      setAnnouncements(announcements.filter(a => a.id !== id));
+  const toggleAdVisibility = async (id: string) => {
+    const updated = await ApiService.toggleAnnouncementVisibility(id);
+    if (updated) {
+      setAnnouncements(announcements.map(a => a.id === id ? updated : a));
+    }
+  };
+
+  // Added React import to resolve "Cannot find namespace 'React'" error on line 178
+  const toggleResponded = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    const updated = await ApiService.toggleMessageResponded(id);
+    if (updated) {
+      setMessages(messages.map(m => m.id === id ? updated : m));
     }
   };
 
@@ -365,6 +376,7 @@ export const AdminDashboard: React.FC<AdminProps> = ({ lang }) => {
               <table className="w-full text-sm text-left">
                 <thead className="bg-gray-50 dark:bg-slate-900/50 text-gray-600 dark:text-gray-400 font-medium">
                   <tr>
+                    <th className={`px-6 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.adminPanel.table.responded}</th>
                     <th className={`px-6 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.adminPanel.table.name}</th>
                     <th className={`px-6 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.adminPanel.table.subject}</th>
                     <th className={`px-6 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.adminPanel.table.phone}</th>
@@ -376,9 +388,17 @@ export const AdminDashboard: React.FC<AdminProps> = ({ lang }) => {
                   {messages.map((msg) => (
                     <tr 
                       key={msg.id} 
-                      className="hover:bg-gray-50 dark:hover:bg-slate-700/50 transition cursor-pointer"
+                      className={`hover:bg-gray-50 dark:hover:bg-slate-700/50 transition cursor-pointer ${msg.responded ? 'bg-green-100 dark:bg-green-900/30' : ''}`}
                       onClick={() => setSelectedMessage(msg)}
                     >
+                      <td className="px-6 py-4">
+                        <button 
+                          onClick={(e) => toggleResponded(e, msg.id)}
+                          className={`p-1 rounded-md transition ${msg.responded ? 'text-green-600' : 'text-gray-400'}`}
+                        >
+                          {msg.responded ? <CheckSquare size={20} /> : <Square size={20} />}
+                        </button>
+                      </td>
                       <td className={`px-6 py-4 font-medium text-gray-900 dark:text-white ${lang === 'ar' ? 'text-right' : 'text-left'}`}>
                         {msg.name}
                         {msg.status === 'unread' && <span className="ml-2 w-2 h-2 bg-red-500 rounded-full inline-block"></span>}
@@ -395,7 +415,7 @@ export const AdminDashboard: React.FC<AdminProps> = ({ lang }) => {
                   ))}
                   {messages.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="px-6 py-8 text-center text-gray-400 dark:text-gray-500">
+                      <td colSpan={6} className="px-6 py-8 text-center text-gray-400 dark:text-gray-500">
                         No messages found.
                       </td>
                     </tr>
@@ -424,7 +444,7 @@ export const AdminDashboard: React.FC<AdminProps> = ({ lang }) => {
               <table className="w-full text-sm text-left">
                 <thead className="bg-gray-50 dark:bg-slate-900/50 text-gray-600 dark:text-gray-400 font-medium">
                   <tr>
-                    <th className={`px-6 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.adminPanel.announcements.titleEn}</th>
+                    <th className={`px-6 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.adminPanel.announcements.titleAr}</th>
                     <th className={`px-6 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.adminPanel.announcements.date}</th>
                     <th className={`px-6 py-3 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.adminPanel.announcements.category}</th>
                     <th className={`px-6 py-3 text-center`}>{t.adminPanel.table.actions}</th>
@@ -432,16 +452,16 @@ export const AdminDashboard: React.FC<AdminProps> = ({ lang }) => {
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
                   {announcements.map((ad) => (
-                    <tr key={ad.id} className="hover:bg-gray-50 dark:hover:bg-slate-700/50 transition">
+                    <tr key={ad.id} className={`hover:bg-gray-50 dark:hover:bg-slate-700/50 transition ${ad.hidden ? 'opacity-50 grayscale' : ''}`}>
                       <td className={`px-6 py-4 font-medium text-gray-900 dark:text-white ${lang === 'ar' ? 'text-right' : 'text-left'}`}>
-                        {ad.title[lang]}
+                        {ad.title.ar}
                       </td>
                       <td className={`px-6 py-4 text-gray-600 dark:text-gray-300 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>
                         {ad.date}
                       </td>
                       <td className={`px-6 py-4 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>
                         <span className="px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded-full text-xs">
-                          {ad.category}
+                          {t.adminPanel.announcements.categories[ad.category as keyof typeof t.adminPanel.announcements.categories]}
                         </span>
                       </td>
                       <td className="px-6 py-4">
@@ -449,8 +469,12 @@ export const AdminDashboard: React.FC<AdminProps> = ({ lang }) => {
                           <button onClick={() => openAdModal(ad)} className="text-blue-500 hover:text-blue-700">
                             <Edit size={18} />
                           </button>
-                          <button onClick={() => deleteAnnouncement(ad.id)} className="text-red-500 hover:text-red-700">
-                            <Trash2 size={18} />
+                          <button 
+                            onClick={() => toggleAdVisibility(ad.id)} 
+                            className={`${ad.hidden ? 'text-green-500 hover:text-green-700' : 'text-amber-500 hover:text-amber-700'}`}
+                            title={ad.hidden ? t.adminPanel.announcements.show : t.adminPanel.announcements.hide}
+                          >
+                            {ad.hidden ? <Eye size={18} /> : <EyeOff size={18} />}
                           </button>
                         </div>
                       </td>
@@ -547,7 +571,7 @@ export const AdminDashboard: React.FC<AdminProps> = ({ lang }) => {
                             rel="noreferrer"
                             className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-bold hover:bg-green-700"
                         >
-                            <MessageCircle size={16} /> Reply via WhatsApp
+                            <MessageCircle size={16} /> {lang === 'ar' || true ? 'الرد عبر واتساب' : 'الرد عبر واتساب'}
                         </a>
                     </div>
                 </div>
@@ -586,11 +610,31 @@ export const AdminDashboard: React.FC<AdminProps> = ({ lang }) => {
                     onChange={(e) => setAdForm({...adForm, category: e.target.value})}
                     className="w-full p-3 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                   >
-                    <option value="general">General</option>
-                    <option value="emergency">Emergency</option>
-                    <option value="service">Service</option>
+                    <option value="general">{TRANSLATIONS.ar.adminPanel.announcements.categories.general}</option>
+                    <option value="emergency">{TRANSLATIONS.ar.adminPanel.announcements.categories.emergency}</option>
+                    <option value="service">{TRANSLATIONS.ar.adminPanel.announcements.categories.service}</option>
                   </select>
                 </div>
+              </div>
+
+              <div className="space-y-4 border-t border-gray-100 dark:border-slate-700 pt-4">
+                <h4 className="font-bold text-gray-800 dark:text-white">المحتوى العربي</h4>
+                <input 
+                  type="text" 
+                  placeholder={t.adminPanel.announcements.titleAr}
+                  value={adForm.titleAr}
+                  onChange={(e) => setAdForm({...adForm, titleAr: e.target.value})}
+                  className="w-full p-3 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white text-right"
+                  dir="rtl"
+                />
+                <textarea 
+                  placeholder={t.adminPanel.announcements.contentAr}
+                  value={adForm.contentAr}
+                  onChange={(e) => setAdForm({...adForm, contentAr: e.target.value})}
+                  rows={3}
+                  className="w-full p-3 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white text-right"
+                  dir="rtl"
+                ></textarea>
               </div>
               
               <div className="space-y-4 border-t border-gray-100 dark:border-slate-700 pt-4">
@@ -608,26 +652,6 @@ export const AdminDashboard: React.FC<AdminProps> = ({ lang }) => {
                   onChange={(e) => setAdForm({...adForm, contentEn: e.target.value})}
                   rows={3}
                   className="w-full p-3 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                ></textarea>
-              </div>
-
-              <div className="space-y-4 border-t border-gray-100 dark:border-slate-700 pt-4">
-                <h4 className="font-bold text-gray-800 dark:text-white">Arabic Content</h4>
-                <input 
-                  type="text" 
-                  placeholder={t.adminPanel.announcements.titleAr}
-                  value={adForm.titleAr}
-                  onChange={(e) => setAdForm({...adForm, titleAr: e.target.value})}
-                  className="w-full p-3 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white text-right"
-                  dir="rtl"
-                />
-                <textarea 
-                  placeholder={t.adminPanel.announcements.contentAr}
-                  value={adForm.contentAr}
-                  onChange={(e) => setAdForm({...adForm, contentAr: e.target.value})}
-                  rows={3}
-                  className="w-full p-3 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white text-right"
-                  dir="rtl"
                 ></textarea>
               </div>
 

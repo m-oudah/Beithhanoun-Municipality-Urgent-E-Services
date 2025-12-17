@@ -1,7 +1,6 @@
 
-
 import React, { useEffect, useState } from 'react';
-import { ArrowRight, ArrowLeft, Building2, Users2, ShieldCheck, Megaphone, Calendar, ChevronRight, ChevronLeft, Heart, Stethoscope, GraduationCap, TreeDeciduous, Zap } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Building2, Users2, ShieldCheck, Megaphone, Calendar, ChevronRight, ChevronLeft, Heart, Stethoscope, GraduationCap, TreeDeciduous, Zap, Building } from 'lucide-react';
 import { TRANSLATIONS, STATISTICS_DATA } from '../constants';
 import { Language, Announcement } from '../types';
 import { ApiService } from '../services/api';
@@ -23,8 +22,8 @@ export const Home: React.FC<HomeProps> = ({ lang, setPage }) => {
     const fetchAds = async () => {
       try {
         const data = await ApiService.getAnnouncements();
-        // Get top 3 latest
-        setAds(data.slice(0, 3));
+        // Get top 3 latest that are not hidden
+        setAds(data.filter(a => !a.hidden).slice(0, 3));
       } catch (error) {
         console.error("Failed to load announcements");
       }
@@ -66,10 +65,11 @@ export const Home: React.FC<HomeProps> = ({ lang, setPage }) => {
               <Arrow size={20} />
             </button>
             <button 
-              onClick={() => setPage('contact')}
+              onClick={() => setPage('housing')}
               className="px-8 py-4 bg-black bg-opacity-30 border border-white/30 text-white font-semibold rounded-lg hover:bg-opacity-50 transition flex items-center justify-center gap-2 backdrop-blur-sm"
             >
-              <span>{t.btnContact}</span>
+              <Building size={20} />
+              <span>{t.btnInquiry}</span>
             </button>
           </div>
         </div>
@@ -94,17 +94,17 @@ export const Home: React.FC<HomeProps> = ({ lang, setPage }) => {
           </div>
 
           <div 
-            onClick={() => {}} // Placeholder
+            onClick={() => setPage('war2023')}
             className="cursor-pointer bg-white dark:bg-slate-800 p-8 rounded-xl shadow-lg border-b-4 border-secondary-500 transition-all group hover:transform hover:-translate-y-1 hover:shadow-xl duration-300"
           >
             <div className="w-14 h-14 bg-red-100 dark:bg-red-900/30 text-secondary-600 dark:text-red-400 rounded-full flex items-center justify-center mb-6 group-hover:bg-secondary-600 group-hover:text-white transition">
               <Building2 size={32} />
             </div>
-            <h3 className="text-xl font-bold mb-3 text-gray-800 dark:text-white group-hover:text-secondary-600 transition">{lang === 'en' ? 'Reconstruction' : 'إعادة الإعمار'}</h3>
+            <h3 className="text-xl font-bold mb-3 text-gray-800 dark:text-white group-hover:text-secondary-600 transition">{lang === 'en' ? 'War Impact' : 'إحصائيات الحرب'}</h3>
             <p className="text-gray-600 dark:text-gray-300 mb-4">
               {lang === 'en' 
-                ? 'Track property damage reports and municipal planning updates.' 
-                : 'متابعة تقارير الأضرار وخطط البلدية للمشاريع المستقبلية.'}
+                ? 'Review the detailed reports on destruction and humanitarian impact.' 
+                : 'متابعة تقارير الأضرار وحجم الدمار في مدينة بيت حانون.'}
             </p>
           </div>
 
@@ -198,7 +198,7 @@ export const Home: React.FC<HomeProps> = ({ lang, setPage }) => {
                             <div className="flex items-center justify-between mb-3 text-xs text-gray-500 dark:text-gray-400">
                                 <span className={`px-2 py-1 rounded-full uppercase font-bold ${
                                     ad.category === 'emergency' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
-                                }`}>{ad.category}</span>
+                                }`}>{t.adminPanel.announcements.categories[ad.category as keyof typeof t.adminPanel.announcements.categories]}</span>
                                 <div className="flex items-center gap-1">
                                     <Calendar size={14} />
                                     <span>{ad.date}</span>

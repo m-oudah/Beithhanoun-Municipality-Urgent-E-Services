@@ -1,5 +1,6 @@
+
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageSquare, X, Send, Bot } from 'lucide-react';
+import { MessageSquare, X, Send, Bot, ExternalLink } from 'lucide-react';
 import { Language, ChatMessage } from '../types';
 import { TRANSLATIONS } from '../constants';
 import { sanitizeInput } from '../utils/validation';
@@ -156,9 +157,10 @@ export const Chatbot: React.FC<ChatbotProps> = ({ lang, setPage }) => {
                   {msg.action && (
                     <button 
                         onClick={() => handleActionClick(msg.action!)}
-                        className="mt-2 text-xs bg-white/20 hover:bg-white/30 px-2 py-1 rounded text-primary-100 underline decoration-dotted"
+                        className="mt-3 w-full bg-secondary-600 hover:bg-secondary-700 text-white px-3 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 transition shadow-lg border-2 border-white/10"
                     >
-                        {isRTL ? 'اضغط هنا للذهاب' : 'Click here to go'}
+                        <span className="text-white drop-shadow-sm">{t.clickToGo}</span>
+                        <ExternalLink size={14} className="text-white" />
                     </button>
                   )}
                   <span className={`text-[10px] block mt-1 opacity-70 ${msg.sender === 'user' ? 'text-primary-100' : 'text-gray-400'}`}>

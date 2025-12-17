@@ -3,29 +3,36 @@ import React from 'react';
 
 export type Language = 'en' | 'ar';
 
+export interface HousingUnit {
+  id: string;
+  ownerName: string;
+  ownerId: string;
+  dob: string;
+  idIssueDate: string;
+  address: string;
+  floors: number;
+  area: number;
+  condition: 'total_destruction' | 'habitable' | 'uninhabitable';
+  lastUpdated: string;
+}
+
 export interface CitizenRecord {
   id: string;
-  // Step 1: Citizen Info
   fullName: string;
   idNumber: string;
   phone: string;
-  whatsapp?: string; // Optional
-  
-  // Step 2: Stay Place
+  whatsapp?: string;
   originalArea: string;
   originalStreet: string;
   originalAddressDetails?: string;
   currentEvacuationState: string;
   evacuationType: string;
-
-  // Step 3: Family Info
   wifeName: string;
   wifeIdNumber: string;
   familyMembers: number;
   males: number;
   females: number;
   notes?: string;
-
   status: 'pending' | 'verified' | 'urgent' | 'completed';
   submittedAt: string;
   adminFeedback?: string;
@@ -40,12 +47,7 @@ export interface ContactMessage {
   message: string;
   submittedAt: string;
   status: 'read' | 'unread';
-}
-
-export interface NavItem {
-  label: string;
-  path: string;
-  icon?: React.ReactNode;
+  responded?: boolean;
 }
 
 export interface ChatMessage {
@@ -68,4 +70,5 @@ export interface Announcement {
     en: string;
     ar: string;
   };
+  hidden?: boolean;
 }

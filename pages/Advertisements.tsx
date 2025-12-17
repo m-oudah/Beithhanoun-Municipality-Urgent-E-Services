@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Calendar, Megaphone, AlertTriangle, Info, CheckCircle2 } from 'lucide-react';
 import { Language, Announcement } from '../types';
@@ -17,7 +18,8 @@ export const Advertisements: React.FC<AdvertisementsProps> = ({ lang }) => {
     const fetchAds = async () => {
       try {
         const data = await ApiService.getAnnouncements();
-        setAds(data);
+        // Filter out hidden ones
+        setAds(data.filter(a => !a.hidden));
       } catch (error) {
         console.error("Failed to fetch ads", error);
       } finally {
@@ -75,7 +77,7 @@ export const Advertisements: React.FC<AdvertisementsProps> = ({ lang }) => {
                     <div className="flex items-center gap-2 mb-2">
                         {getCategoryIcon(ad.category)}
                         <span className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                            {ad.category}
+                            {t.adminPanel.announcements.categories[ad.category as keyof typeof t.adminPanel.announcements.categories]}
                         </span>
                     </div>
                     <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2 leading-relaxed">
