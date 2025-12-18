@@ -53,7 +53,7 @@ export const ApiService = {
   },
 
   async deleteHousingUnit(id: string): Promise<boolean> {
-    await delay(500);
+    await delay(400);
     const units = await ApiService.getAllHousingUnits();
     const filtered = units.filter(u => u.id !== id);
     localStorage.setItem('housing_units', JSON.stringify(filtered));
